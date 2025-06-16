@@ -113,8 +113,8 @@ export default function ITAdminDashboard() {
       icon: <EventIcon sx={{ fontSize: 48 }} />,
       color: '#1976d2',
       gradient: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
-      trend: '+12%',
-      description: 'All events created',
+      // trend: '+12%',
+      // description: 'All events created',
     },
     {
       title: 'Active Events',
@@ -122,8 +122,8 @@ export default function ITAdminDashboard() {
       icon: <TrendingUp sx={{ fontSize: 48 }} />,
       color: '#2e7d32',
       gradient: 'linear-gradient(135deg,rgb(75, 207, 75) 0%,rgb(89, 167, 74) 100%)',
-      trend: '+8%',
-      description: 'Currently running',
+      // trend: '+8%',
+      // description: 'Currently running',
     },
   ];
 
@@ -288,16 +288,16 @@ export default function ITAdminDashboard() {
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
                           <Chip
-                            label={stat.trend}
+                            // label={stat.trend}
                             size="small"
                             sx={{
-                              bgcolor: 'rgba(255, 255, 255, 0.2)',
+                              bgcolor: 'rgba(255, 255, 255, 0.0)',
                               color: 'white',
                               fontWeight: 600,
                             }}
                           />
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                            {stat.description}
+                          <Typography variant="body2" sx={{ opacity: 0.0 }}>
+                            {/* {stat.description} */}
                           </Typography>
                         </Box>
                       </Box>
