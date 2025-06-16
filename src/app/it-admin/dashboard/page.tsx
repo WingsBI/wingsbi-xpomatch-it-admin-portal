@@ -157,7 +157,7 @@ export default function ITAdminDashboard() {
                 mr: 2,
               }}
             >
-              <EventIcon sx={{ color: 'white', fontSize: 24 }} />
+              <EventIcon sx={{ color: 'white', fontSize: 20 }} />
             </Box>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
@@ -263,7 +263,7 @@ export default function ITAdminDashboard() {
                     transition: 'all 0.3s ease-in-out',
                   }}
                 >
-                  <CardContent sx={{ p: 3}}>
+                  <CardContent sx={{ p: 2}}>
                     <Box display="flex" alignItems="center" justifyContent="space-between">
                       <Box>
                         <Typography 

@@ -16,10 +16,12 @@ import {
   Select,
   MenuItem,
   Alert,
+  IconButton,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 interface CreateEventDialogProps {
@@ -33,20 +35,25 @@ interface EventForm {
   description: string;
   startDate: string;
   endDate: string;
-  location: string;
-  maxVisitors: number;
-  maxExhibitors: number;
+  venueName: string;
+  addressLine1: string;
+  addressLine2: string;
+  country: string;
+  state: string;
+  city: string;
+  googleMapLink: string;
+  marketingAbbreviation: string;
   eventAdminEmail: string;
   eventAdminFirstName: string;
   eventAdminLastName: string;
   eventAdminPassword: string;
-  marketingAbbreviation: string;
 }
 
 export default function CreateEventDialog({ open, onClose, onEventCreated }: CreateEventDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generatedEventId, setGeneratedEventId] = useState('');
+  const [closeRotated, setCloseRotated] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>();
 
@@ -64,13 +71,8 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     setError('');
 
     try {
-      const eventId = generatedEventId || generateEventId();
-      
       const payload = {
         ...data,
-        eventId,
-        maxVisitors: Number(data.maxVisitors),
-        maxExhibitors: Number(data.maxExhibitors),
       };
 
       const response = await fetch('/api/it-admin/events', {
@@ -117,16 +119,16 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           position: 'relative',
           overflow: 'visible',
           borderRadius: { xs: 0, sm: 4 },
-          boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-          background: 'rgba(53, 53, 54, 0.92)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(18px)',
-          border: '1.5px solid rgba(255,255,255,0.22)',
+          border: '1px solid rgba(0, 0, 0, 0.08)',
           m: { xs: 0, sm: 2 },
         },
       }}
       BackdropProps={{
         sx: {
-          background: 'rgba(20, 20, 30, 0.65)',
+          background: 'rgba(0, 0, 0, 0.4)',
           backdropFilter: 'blur(2px)',
         },
       }}
@@ -141,7 +143,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           width: 160,
           height: 160,
           borderRadius: '50%',
-          background: 'rgba(210, 25, 201, 0.18)',
+          background: 'rgba(25, 118, 210, 0.08)',
           filter: 'blur(18px)',
           zIndex: 0,
         }}
@@ -154,33 +156,48 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           width: 200,
           height: 200,
           borderRadius: '50%',
-          background: 'rgba(245, 66, 230, 0.13)',
+          background: 'rgba(66, 108, 245, 0.06)',
           filter: 'blur(24px)',
           zIndex: 0,
         }}
       />
-      <DialogTitle sx={{ zIndex: 1, pb: 0 }}>
-        <Typography
-          variant="h5"
-          component="div"
+      <DialogTitle sx={{ zIndex: 1, pb: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography
+            variant="h5"
+            component="div"
+            sx={{
+              fontWeight: 800,
+              color: '#1a1a1a',
+              mb: 0.5,
+              fontSize: { xs: '1.3rem', sm: '1.7rem', md: '2rem' },
+              letterSpacing: 0.5,
+            }}
+          >
+            Create New Event
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="close"
+          onClick={() => {
+            setCloseRotated(true);
+            setTimeout(() => {
+              setCloseRotated(false);
+              handleClose();
+            }, 300);
+          }}
           sx={{
-            fontWeight: 800,
-            color: 'white',
-            background: 'linear-gradient(45deg, #fff 30%, rgba(255,255,255,0.8) 90%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 0.5,
-            fontSize: { xs: '1.3rem', sm: '1.7rem', md: '2rem' },
-            letterSpacing: 0.5,
+            ml: 2,
+            transition: 'transform 0.3s',
+            transform: closeRotated ? 'rotate(180deg)' : 'none',
           }}
         >
-          Create New Event
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.92)', fontWeight: 400, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
-          Create a new event and assign an event administrator
-        </Typography>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
+      <Typography variant="body2" sx={{ color: '#666', fontWeight: 400, fontSize: { xs: '0.95rem', sm: '1.05rem' }, px: 3, pb: 1 }}>
+        Create a new event and assign an event administrator
+      </Typography>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent
@@ -191,17 +208,19 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             background: 'transparent',
             maxHeight: { xs: 'calc(100vh - 120px)', sm: '70vh' },
             overflowY: 'auto',
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
           }}
         >
           {error && (
-            <Alert severity="error" sx={{ mb: 3, background: 'rgba(244, 67, 54, 0.18)', color: 'white', border: '1.5px solid rgba(244, 67, 54, 0.3)', fontWeight: 600, '& .MuiAlert-icon': { color: '#ff6b6b' } }}>
+            <Alert severity="error" sx={{ mb: 3, background: 'rgba(244, 67, 54, 0.1)', color: '#d32f2f', border: '1px solid rgba(244, 67, 54, 0.3)', fontWeight: 600, '& .MuiAlert-icon': { color: '#d32f2f' } }}>
               {error}
             </Alert>
           )}
 
           {/* Event ID Section */}
           <Box mb={3}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event Identification
             </Typography>
             <Box display="flex" gap={2} alignItems="end" flexDirection={{ xs: 'column', sm: 'row' }}>
@@ -210,52 +229,32 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 label="Event ID"
                 value={generatedEventId}
                 InputProps={{ readOnly: true }}
-                helperText="Auto-generated unique identifier"
+                // helperText="Auto-generated unique identifier"
                 sx={{
-                  bgcolor: 'rgba(255,255,255,0.25)',
+                  bgcolor: 'rgba(0, 0, 0, 0.02)',
                   borderRadius: 2,
                   '& .MuiOutlinedInput-root': {
-                    color: 'white',
+                    color: '#1a1a1a',
                     fontWeight: 700,
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(255,255,255,0.8)',
+                    color: '#666',
                   },
                   '& .MuiInputBase-input': {
-                    color: 'white',
+                    color: '#1a1a1a',
                   },
                   '& .MuiFormHelperText-root': {
-                    color: 'rgba(255,255,255,0.7)',
+                    color: '#666',
                   },
                 }}
               />
-              <Button
-                variant="outlined"
-                onClick={handleGenerateId}
-                sx={{
-                  minWidth: 120,
-                  height: 56,
-                  borderRadius: 2,
-                  color: 'white',
-                  borderColor: 'rgba(255,255,255,0.7)',
-                  fontWeight: 700,
-                  background: 'linear-gradient(45deg,rgba(25,118,210,0.22) 30%,rgba(25,118,210,0.22) 90%)',
-                  fontSize: { xs: '1rem', sm: '1.08rem' },
-                  mt: { xs: 2, sm: 0 },
-                  '&:hover': {
-                    background: 'linear-gradient(45deg,rgba(25,118,210,0.32) 30%,rgba(25,118,210,0.32) 90%)',
-                    borderColor: 'white',
-                  },
-                }}
-              >
-                Generate ID
-              </Button>
+              
             </Box>
           </Box>
 
           {/* Event Details Section */}
           <Box mb={3}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event Details
             </Typography>
             <Grid container spacing={2}>
@@ -266,23 +265,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   {...register('name', { required: 'Event name is required' })}
                   error={!!errors.name}
                   helperText={errors.name?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      fontWeight: 600,
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -292,19 +275,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   multiline
                   rows={3}
                   {...register('description')}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.18)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                  }}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -316,22 +287,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   {...register('startDate', { required: 'Start date is required' })}
                   error={!!errors.startDate}
                   helperText={errors.startDate?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -343,138 +299,124 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   {...register('endDate', { required: 'End date is required' })}
                   error={!!errors.endDate}
                   helperText={errors.endDate?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Location"
-                  {...register('location', { required: 'Location is required' })}
-                  error={!!errors.location}
-                  helperText={errors.location?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Max Visitors"
-                  type="number"
-                  {...register('maxVisitors', { 
-                    required: 'Max visitors is required',
-                    min: { value: 1, message: 'Must be at least 1' }
-                  })}
-                  error={!!errors.maxVisitors}
-                  helperText={errors.maxVisitors?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Max Exhibitors"
-                  type="number"
-                  {...register('maxExhibitors', { 
-                    required: 'Max exhibitors is required',
-                    min: { value: 1, message: 'Must be at least 1' }
-                  })}
-                  error={!!errors.maxExhibitors}
-                  helperText={errors.maxExhibitors?.message}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Marketing Abbreviation"
-                  placeholder="e.g., TECH2024, EXPO24"
-                  {...register('marketingAbbreviation')}
-                  helperText="Optional: Short code for marketing purposes"
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.18)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: 'rgba(255,255,255,0.7)',
-                    },
-                  }}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
             </Grid>
           </Box>
 
+          {/* Location Section */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+              Location
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Venue Name"
+                  {...register('venueName', { required: 'Venue name is required' })}
+                  error={!!errors.venueName}
+                  helperText={errors.venueName?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Address Line 1"
+                  {...register('addressLine1', { required: 'Address line 1 is required' })}
+                  error={!!errors.addressLine1}
+                  helperText={errors.addressLine1?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Address Line 2"
+                  {...register('addressLine2')}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Country"
+                  select
+                  defaultValue=""
+                  {...register('country', { required: 'Country is required' })}
+                  error={!!errors.country}
+                  helperText={errors.country?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                >
+                  <MenuItem value="">Select Country</MenuItem>
+                  <MenuItem value="India">India</MenuItem>
+                  <MenuItem value="USA">USA</MenuItem>
+                  {/* Add more countries as needed */}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="State"
+                  select
+                  defaultValue=""
+                  {...register('state', { required: 'State is required' })}
+                  error={!!errors.state}
+                  helperText={errors.state?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                >
+                  <MenuItem value="">Select State</MenuItem>
+                  <MenuItem value="Maharashtra">Maharashtra</MenuItem>
+                  <MenuItem value="California">California</MenuItem>
+                  {/* Add more states as needed */}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="City"
+                  select
+                  defaultValue=""
+                  {...register('city', { required: 'City is required' })}
+                  error={!!errors.city}
+                  helperText={errors.city?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                >
+                  <MenuItem value="">Select City</MenuItem>
+                  <MenuItem value="Mumbai">Mumbai</MenuItem>
+                  <MenuItem value="San Francisco">San Francisco</MenuItem>
+                  {/* Add more cities as needed */}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Google Map Link (or Lat, Long)"
+                  {...register('googleMapLink')}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Marketing Abbreviation */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+              Marketing Abbreviation
+            </Typography>
+            <TextField
+              fullWidth
+              label="Marketing Abbreviation"
+              {...register('marketingAbbreviation')}
+              sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+            />
+          </Box>
+
           {/* Event Admin Section */}
           <Box mb={3}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event Administrator
             </Typography>
             <Grid container spacing={2}>
@@ -486,19 +428,19 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   error={!!errors.eventAdminFirstName}
                   helperText={errors.eventAdminFirstName?.message}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
+                    bgcolor: 'rgba(0, 0, 0, 0.02)',
                     borderRadius: 2,
                     '& .MuiOutlinedInput-root': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
+                      color: '#d32f2f',
                     },
                   }}
                 />
@@ -511,19 +453,19 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   error={!!errors.eventAdminLastName}
                   helperText={errors.eventAdminLastName?.message}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
+                    bgcolor: 'rgba(0, 0, 0, 0.02)',
                     borderRadius: 2,
                     '& .MuiOutlinedInput-root': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
+                      color: '#d32f2f',
                     },
                   }}
                 />
@@ -543,25 +485,25 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   error={!!errors.eventAdminEmail}
                   helperText={errors.eventAdminEmail?.message}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
+                    bgcolor: 'rgba(0, 0, 0, 0.02)',
                     borderRadius: 2,
                     '& .MuiOutlinedInput-root': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
+                      color: '#d32f2f',
                     },
                   }}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                {/* <TextField
                   fullWidth
                   label="Temporary Password"
                   type="password"
@@ -572,22 +514,22 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   error={!!errors.eventAdminPassword}
                   helperText={errors.eventAdminPassword?.message || 'Event admin will be required to change this on first login'}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.25)',
+                    bgcolor: 'rgba(0, 0, 0, 0.02)',
                     borderRadius: 2,
                     '& .MuiOutlinedInput-root': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255,255,255,0.8)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                     '& .MuiFormHelperText-root': {
-                      color: '#ffbdbd',
+                      color: '#d32f2f',
                     },
                   }}
-                />
+                /> */}
               </Grid>
             </Grid>
           </Box>
@@ -599,16 +541,16 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             disabled={loading}
             sx={{
               borderRadius: 2,
-              color: 'white',
-              borderColor: 'rgba(255,255,255,0.7)',
+              color: '#666',
+              borderColor: 'rgba(0, 0, 0, 0.12)',
               fontWeight: 700,
-              background: 'linear-gradient(45deg,rgba(25,118,210,0.18) 30%,rgba(25,118,210,0.18) 90%)',
+              background: 'rgba(0, 0, 0, 0.04)',
               fontSize: { xs: '1rem', sm: '1.08rem' },
               px: 3,
               py: 1.2,
               '&:hover': {
-                background: 'linear-gradient(45deg,rgba(25,118,210,0.28) 30%,rgba(25,118,210,0.28) 90%)',
-                borderColor: 'white',
+                background: 'rgba(0, 0, 0, 0.08)',
+                borderColor: 'rgba(0, 0, 0, 0.2)',
               },
             }}
           >
@@ -623,19 +565,19 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               borderRadius: 2,
               fontWeight: 800,
               fontSize: { xs: '1.08rem', sm: '1.15rem' },
-              background: 'linear-gradient(45deg,rgb(25, 118, 210) 30%,rgb(25, 118, 210) 90%)',
-              boxShadow: '0 4px 15px rgba(25, 118, 210, 0.18)',
+              background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
+              boxShadow: '0 4px 15px rgba(53, 73, 250, 0.65)',
               color: 'white',
               px: 3,
               py: 1.2,
               letterSpacing: 0.2,
               '&:hover': {
-                background: 'linear-gradient(45deg,rgba(25, 118, 210, 0.8) 30%,rgba(25, 118, 210, 0.8) 90%)',
-                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.18)',
+                background: 'linear-gradient(135deg,rgb(26, 65, 240) 0%,rgb(79, 101, 221) 100%)',
+                boxShadow: '0 4px 15px rgba(63, 44, 231, 0.65)',
                 transform: 'translateY(-2px)',
               },
               '&:disabled': {
-                background: 'rgba(255, 255, 255, 0.2)',
+                background: 'rgba(0, 0, 0, 0.12)',
               },
               transition: 'all 0.3s ease',
             }}
