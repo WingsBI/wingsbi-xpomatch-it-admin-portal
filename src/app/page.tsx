@@ -58,7 +58,7 @@ export default function HomePage() {
     <Box
       sx={{
         height: '100vh',
-        background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -76,7 +76,7 @@ export default function HomePage() {
           width: { xs: 150, md: 200 },
           height: { xs: 150, md: 200 },
           borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.1)',
+          background: 'rgba(255, 255, 255, 0.3)',
           animation: 'float 6s ease-in-out infinite',
         }}
       />
@@ -88,7 +88,7 @@ export default function HomePage() {
           width: { xs: 200, md: 300 },
           height: { xs: 200, md: 300 },
           borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: 'rgba(255, 255, 255, 0.2)',
           animation: 'float 8s ease-in-out infinite reverse',
         }}
       />
@@ -96,7 +96,7 @@ export default function HomePage() {
       <Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
         <Fade in timeout={800}>
           <Box textAlign="center" mb={{ xs: 2, md: 3 }}>
-            <Box
+            {/* <Box
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -104,25 +104,20 @@ export default function HomePage() {
                 width: { xs: 60, md: 70 },
                 height: { xs: 60, md: 70 },
                 borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)',
+                background: 'linear-gradient(135deg,rgb(25, 210, 201) 0%,rgb(66, 108, 245) 100%)',
                 mb: { xs: 1.5, md: 2 },
               }}
             >
               <AdminPanelSettings sx={{ fontSize: { xs: 30, md: 35 }, color: 'white' }} />
-            </Box>
+            </Box> */}
             <Typography
               variant="h2"
               component="h1"
               sx={{
-                color: 'white',
+                color: '#1a1a1a',
                 fontWeight: 700,
                 mb: { xs: 0.5, md: 1 },
                 fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-                background: 'linear-gradient(45deg, #fff 30%, rgba(255,255,255,0.8) 90%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
                 lineHeight: 1.1,
               }}
             >
@@ -132,7 +127,7 @@ export default function HomePage() {
               variant="h4"
               component="h2"
               sx={{
-                color: 'white',
+                color: '#666',
                 fontWeight: 300,
                 mb: { xs: 1, md: 1.5 },
                 fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.25rem' },
@@ -144,7 +139,7 @@ export default function HomePage() {
             <Typography
               variant="body1"
               sx={{
-                color: 'rgba(255, 255, 255, 0.9)',
+                color: '#666',
                 fontWeight: 300,
                 maxWidth: 400,
                 mx: 'auto',
@@ -160,11 +155,11 @@ export default function HomePage() {
         <Fade in timeout={1200}>
           <Card
             sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(20px)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
               borderRadius: 3,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
               mb: { xs: 2, md: 3 },
             }}
           >
@@ -175,8 +170,8 @@ export default function HomePage() {
                 textAlign="center"
                 sx={{
                   mt: { xs: 1, md: 1 },
-                  color: 'white',
-                  fontWeight: 500,
+                  color: '#1a1a1a',
+                  fontWeight: 550,
                   mb: { xs: 1, md: 1 },
                   fontSize: { xs: '1.25rem', md: '1.5rem' },
                 }}
@@ -190,10 +185,10 @@ export default function HomePage() {
                   sx={{
                     mb: 2,
                     background: 'rgba(244, 67, 54, 0.1)',
-                    color: 'white',
+                    color: '#d32f2f',
                     border: '1px solid rgba(244, 67, 54, 0.3)',
                     '& .MuiAlert-icon': {
-                      color: '#ff6b6b',
+                      color: '#d32f2f',
                     },
                   }}
                 >
@@ -214,22 +209,22 @@ export default function HomePage() {
                   sx={{
                     mb: 1.5,
                     '& .MuiOutlinedInput-root': {
-                      background: 'rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        borderColor: 'rgba(0, 0, 0, 0.2)',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: 'white',
+                        borderColor: '#1976d2',
                       },
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                   }}
                 />
@@ -250,7 +245,7 @@ export default function HomePage() {
                           aria-label="toggle password visibility"
                           onClick={togglePasswordVisibility}
                           edge="end"
-                          sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                          sx={{ color: '#666' }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -260,22 +255,22 @@ export default function HomePage() {
                   sx={{
                     mb: 2,
                     '& .MuiOutlinedInput-root': {
-                      background: 'rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        borderColor: 'rgba(0, 0, 0, 0.2)',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: 'white',
+                        borderColor: '#1976d2',
                       },
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: '#666',
                     },
                     '& .MuiInputBase-input': {
-                      color: 'white',
+                      color: '#1a1a1a',
                     },
                   }}
                 />
@@ -291,15 +286,15 @@ export default function HomePage() {
                     py: 1.5,
                     fontSize: { xs: '1rem', md: '1.1rem' },
                     fontWeight: 600,
-                    background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
-                    boxShadow: '0 4px 15px rgba(23, 5, 126, 0.4)',
+                    background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%) 100%)',
+                    boxShadow: '0 4px 15px rgba(53, 73, 250, 0.65)',
                     '&:hover': {
-                      background: 'linear-gradient(135deg,rgb(40, 77, 241) 0%,rgb(104, 169, 223) 100%)',
-                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.6)',
+                      background: 'linear-gradient(135deg,rgb(26, 65, 240) 0%,rgb(79, 101, 221) 100%) 100%)',
+                      boxShadow: '0 4px 15px rgba(63, 44, 231, 0.65)',
                       transform: 'translateY(-2px)',
                     },
                     '&:disabled': {
-                      background: 'rgba(255, 255, 255, 0.2)',
+                      background: 'rgba(0, 0, 0, 0.12)',
                     },
                     transition: 'all 0.3s ease',
                   }}
@@ -315,7 +310,7 @@ export default function HomePage() {
           <Typography
             variant="body2"
             sx={{
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: '#666',
               fontSize: { xs: '0.75rem', md: '0.875rem' },
             }}
           >
@@ -332,9 +327,6 @@ export default function HomePage() {
           50% {
             transform: translateY(-20px);
           }
-        }
-
-        
         }
       `}</style>
     </Box>
