@@ -176,7 +176,7 @@ export default function HomePage() {
                   fontSize: { xs: '1.25rem', md: '1.5rem' },
                 }}
               >
-                Welcome Back
+                Sign In
               </Typography>
 
               {error && (
@@ -196,7 +196,15 @@ export default function HomePage() {
                 </Alert>
               )}
 
-              <Box component="form" onSubmit={handleLogin}>
+              <Box component="form" onSubmit={handleLogin}
+              sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                width: '100%', 
+                maxWidth: 500, // Container width constraint
+                mx: 'auto' // Center align in parent
+              }}>
                 <TextField
                   fullWidth
                   label="Email Address"

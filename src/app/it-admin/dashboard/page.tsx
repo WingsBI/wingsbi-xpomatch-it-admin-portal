@@ -106,26 +106,7 @@ export default function ITAdminDashboard() {
     });
   };
 
-  const statCards = [
-    {
-      title: 'Total Events',
-      value: stats?.totalEvents || 0,
-      icon: <EventIcon sx={{ fontSize: 48 }} />,
-      color: '#1976d2',
-      gradient: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
-      // trend: '+12%',
-      // description: 'All events created',
-    },
-    {
-      title: 'Active Events',
-      value: stats?.activeEvents || 0,
-      icon: <TrendingUp sx={{ fontSize: 48 }} />,
-      color: '#2e7d32',
-      gradient: 'linear-gradient(135deg,rgb(75, 207, 75) 0%,rgb(89, 167, 74) 100%)',
-      // trend: '+8%',
-      // description: 'Currently running',
-    },
-  ];
+
 
   return (
     <Box sx={{ 
@@ -219,7 +200,7 @@ export default function ITAdminDashboard() {
       {/* Main Content */}
       <Container maxWidth="xl" sx={{ py: 2 }}>
         {/* Welcome Section */}
-        <Fade in timeout={600}>
+        {/* <Fade in timeout={600}>
           <Box mb={3}>
             <Typography 
               variant="h4" 
@@ -241,100 +222,9 @@ export default function ITAdminDashboard() {
               Manage your events and monitor platform performance
             </Typography>
           </Box>
-        </Fade>
+        </Fade> */}
 
-        {/* Stats Cards */}
-        <Grid container spacing={3} mb={2}>
-          {statCards.map((stat, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Grow in timeout={800 + index * 200}>
-                <Card
-                  sx={{
-                    background: stat.gradient,
-                    color: 'white',
-                    borderRadius: 4,
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.16)',
-                    },
-                    transition: 'all 0.3s ease-in-out',
-                  }}
-                >
-                  <CardContent sx={{ p: 2}}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography 
-                          variant="h6" 
-                          sx={{ 
-                            fontWeight: 600,
-                            opacity: 0.9,
-                            mb: 1,
-                          }}
-                        >
-                          {stat.title}
-                        </Typography>
-                        <Typography 
-                          variant="h2" 
-                          sx={{ 
-                            fontWeight: 600,
-                            mb: 1,
-                            fontSize: '2rem',
-                          }}
-                        >
-                          {stat.value}
-                        </Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Chip
-                            // label={stat.trend}
-                            size="small"
-                            sx={{
-                              bgcolor: 'rgba(255, 255, 255, 0.0)',
-                              color: 'white',
-                              fontWeight: 600,
-                            }}
-                          />
-                          <Typography variant="body2" sx={{ opacity: 0.0 }}>
-                            {/* {stat.description} */}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Box sx={{ opacity: 0.8 }}>
-                        {stat.icon}
-                      </Box>
-                    </Box>
-                  </CardContent>
-                  
-                  {/* Decorative background elements */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: -20,
-                      right: -20,
-                      width: 100,
-                      height: 100,
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: -30,
-                      left: -30,
-                      width: 80,
-                      height: 80,
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                    }}
-                  />
-                </Card>
-              </Grow>
-            </Grid>
-          ))}
-        </Grid>
+
 
         {/* Events Management */}
         <Fade in timeout={1200}>
