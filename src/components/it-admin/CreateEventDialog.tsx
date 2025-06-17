@@ -23,6 +23,38 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 
+const FONT_OPTIONS = [
+  { id: 1, label: 'Nunito Sans', fontFamily: 'Nunito Sans, system-ui, sans-serif', className: 'font-nunito' },
+  { id: 2, label: 'Inter', fontFamily: 'Inter, system-ui, sans-serif', className: 'font-inter' },
+  { id: 3, label: 'Roboto', fontFamily: 'Roboto, system-ui, sans-serif', className: 'font-roboto' },
+  { id: 4, label: 'Poppins', fontFamily: 'Poppins, system-ui, sans-serif', className: 'font-poppins' },
+  { id: 5, label: 'Montserrat', fontFamily: 'Montserrat, system-ui, sans-serif', className: 'font-montserrat' },
+  { id: 6, label: 'Open Sans', fontFamily: 'Open Sans, system-ui, sans-serif', className: 'font-opensans' },
+  { id: 7, label: 'Lato', fontFamily: 'Lato, system-ui, sans-serif', className: 'font-lato' },
+  { id: 8, label: 'Broadway', fontFamily: 'Broadway, system-ui, sans-serif', className: 'font-broadway' },
+  { id: 9, label: 'Blackadder ITC', fontFamily: 'Blackadder ITC, system-ui, sans-serif', className: 'font-blackadder' },
+  { id: 10, label: 'Cavolini', fontFamily: 'Cavolini, system-ui, sans-serif', className: 'font-cavolini' },
+  { id: 11, label: 'Freestyle Script', fontFamily: 'Freestyle Script, system-ui, sans-serif', className: 'font-freestyle' },
+  { id: 12, label: 'Magneto Bold', fontFamily: 'Magneto Bold, system-ui, sans-serif', className: 'font-magneto' },
+  { id: 13, label: 'Matura MT Script Capitals', fontFamily: 'Matura MT Script Capitals, system-ui, sans-serif', className: 'font-matura' },
+  { id: 14, label: 'Pristina', fontFamily: 'Pristina, system-ui, sans-serif', className: 'font-pristina' },
+  { id: 15, label: 'Raleway', fontFamily: 'Raleway, system-ui, sans-serif', className: 'font-raleway' },
+  { id: 16, label: 'Ravie', fontFamily: 'Ravie, system-ui, sans-serif', className: 'font-ravie' },
+  { id: 17, label: 'Rockwell', fontFamily: 'Rockwell, system-ui, sans-serif', className: 'font-rockwell' },
+  { id: 18, label: 'Sofia Pro', fontFamily: 'Sofia Pro, system-ui, sans-serif', className: 'font-sofia' },
+];
+const THEME_OPTIONS = [
+  { id: 1, label: 'Ocean Blue', color: '#1976d2' },
+  { id: 2, label: 'Midnight Professional', color: '#232a36' },
+  { id: 3, label: 'Executive Gray', color: '#4b4f56' },
+  { id: 4, label: 'Forest Professional', color: '#1db954' },
+  { id: 5, label: 'Royal Professional', color: '#7c3aed' },
+  { id: 6, label: 'Teal Professional', color: '#009688' },
+  { id: 7, label: 'Sunset Professional', color: '#ff7043' },
+  { id: 8, label: 'Indigo Professional', color: '#3f51b5' },
+  { id: 9, label: 'Crimson Professional', color: '#e53935' },
+  { id: 10, label: 'Rose Professional', color: '#e57373' },
+];
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -31,6 +63,8 @@ interface CreateEventDialogProps {
 }
 
 interface EventForm {
+  font: number;
+  theme: number;
   name: string;
   description: string;
   startDate: string;
@@ -217,6 +251,8 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               {error}
             </Alert>
           )}
+
+          
 
           {/* Event ID Section */}
           <Box mb={3}>
@@ -412,6 +448,74 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               {...register('marketingAbbreviation')}
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
             />
+          </Box>
+
+          {/* Font and Theme Selection */}
+          <Box mb={3}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Font Family"
+                  defaultValue={1}
+                  {...register('font', { required: 'Font is required', valueAsNumber: true })}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                  SelectProps={{
+                    MenuProps: {
+                      PaperProps: {
+                        style: {
+                          maxHeight: 250,
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {FONT_OPTIONS.map(font => (
+                    <MenuItem 
+                      key={font.id} 
+                      value={font.id}
+                      className={font.className}
+                      sx={{
+                        fontFamily: `${font.fontFamily} !important`,
+                        fontSize: '16px !important',
+                        fontWeight: '400 !important',
+                        '&:hover': {
+                          fontFamily: `${font.fontFamily} !important`,
+                        },
+                        '&.Mui-selected': {
+                          fontFamily: `${font.fontFamily} !important`,
+                        },
+                        '&.Mui-focusVisible': {
+                          fontFamily: `${font.fontFamily} !important`,
+                        }
+                      }}
+                    >
+                      <span className={font.className} style={{ fontFamily: font.fontFamily, fontSize: '16px', fontWeight: '400' }}>
+                        {font.label}
+                      </span>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Theme Selection"
+                  defaultValue={1}
+                  {...register('theme', { required: 'Theme is required', valueAsNumber: true })}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                >
+                  {THEME_OPTIONS.map(theme => (
+                    <MenuItem key={theme.id} value={theme.id}>
+                      <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', bgcolor: theme.color, mr: 1, border: `1px solid ${theme.color}` }} />
+                      {theme.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
           </Box>
 
           {/* Event Admin Section */}

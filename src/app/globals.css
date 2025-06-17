@@ -1,3 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+
+/* Force font loading for dropdown options */
+.MuiMenuItem-root {
+  font-family: inherit !important;
+}
+
+/* Specific font classes for dropdown options */
+.font-nunito { font-family: 'Nunito Sans', system-ui, sans-serif !important; }
+.font-inter { font-family: 'Inter', system-ui, sans-serif !important; }
+.font-roboto { font-family: 'Roboto', system-ui, sans-serif !important; }
+.font-poppins { font-family: 'Poppins', system-ui, sans-serif !important; }
+.font-montserrat { font-family: 'Montserrat', system-ui, sans-serif !important; }
+.font-opensans { font-family: 'Open Sans', system-ui, sans-serif !important; }
+.font-lato { font-family: 'Lato', system-ui, sans-serif !important; }
+
 * {
   box-sizing: border-box;
   padding: 0;
