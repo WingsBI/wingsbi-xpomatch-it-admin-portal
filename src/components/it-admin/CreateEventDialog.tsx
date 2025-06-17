@@ -17,11 +17,13 @@ import {
   MenuItem,
   Alert,
   IconButton,
+  Avatar,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import ImageIcon from '@mui/icons-material/Image';
 
 const FONT_OPTIONS = [
   { id: 1, label: 'Nunito Sans', fontFamily: 'Nunito Sans, system-ui, sans-serif', className: 'font-nunito' },
@@ -31,17 +33,6 @@ const FONT_OPTIONS = [
   { id: 5, label: 'Montserrat', fontFamily: 'Montserrat, system-ui, sans-serif', className: 'font-montserrat' },
   { id: 6, label: 'Open Sans', fontFamily: 'Open Sans, system-ui, sans-serif', className: 'font-opensans' },
   { id: 7, label: 'Lato', fontFamily: 'Lato, system-ui, sans-serif', className: 'font-lato' },
-  { id: 8, label: 'Broadway', fontFamily: 'Broadway, system-ui, sans-serif', className: 'font-broadway' },
-  { id: 9, label: 'Blackadder ITC', fontFamily: 'Blackadder ITC, system-ui, sans-serif', className: 'font-blackadder' },
-  { id: 10, label: 'Cavolini', fontFamily: 'Cavolini, system-ui, sans-serif', className: 'font-cavolini' },
-  { id: 11, label: 'Freestyle Script', fontFamily: 'Freestyle Script, system-ui, sans-serif', className: 'font-freestyle' },
-  { id: 12, label: 'Magneto Bold', fontFamily: 'Magneto Bold, system-ui, sans-serif', className: 'font-magneto' },
-  { id: 13, label: 'Matura MT Script Capitals', fontFamily: 'Matura MT Script Capitals, system-ui, sans-serif', className: 'font-matura' },
-  { id: 14, label: 'Pristina', fontFamily: 'Pristina, system-ui, sans-serif', className: 'font-pristina' },
-  { id: 15, label: 'Raleway', fontFamily: 'Raleway, system-ui, sans-serif', className: 'font-raleway' },
-  { id: 16, label: 'Ravie', fontFamily: 'Ravie, system-ui, sans-serif', className: 'font-ravie' },
-  { id: 17, label: 'Rockwell', fontFamily: 'Rockwell, system-ui, sans-serif', className: 'font-rockwell' },
-  { id: 18, label: 'Sofia Pro', fontFamily: 'Sofia Pro, system-ui, sans-serif', className: 'font-sofia' },
 ];
 const THEME_OPTIONS = [
   { id: 1, label: 'Ocean Blue', color: '#1976d2' },
@@ -77,6 +68,8 @@ interface EventForm {
   city: string;
   googleMapLink: string;
   marketingAbbreviation: string;
+  eventUrl: string;
+  eventLogoUrl: string;
   eventAdminEmail: string;
   eventAdminFirstName: string;
   eventAdminLastName: string;
@@ -88,6 +81,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   const [error, setError] = useState('');
   const [generatedEventId, setGeneratedEventId] = useState('');
   const [closeRotated, setCloseRotated] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string>('');
 
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>();
 
@@ -134,12 +128,19 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     reset();
     setError('');
     setGeneratedEventId('');
+    setLogoPreview('');
     onClose();
   };
 
   const handleGenerateId = () => {
     generateEventId();
   };
+
+  const handleLogoUrlChange = (url: string) => {
+    setLogoPreview(url);
+  };
+
+  const watchedLogoUrl = watch('eventLogoUrl');
 
   return (
     <Dialog
@@ -201,10 +202,10 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             variant="h5"
             component="div"
             sx={{
-              fontWeight: 800,
+              fontWeight: 700,
               color: '#1a1a1a',
               mb: 0.5,
-              fontSize: { xs: '1.3rem', sm: '1.7rem', md: '2rem' },
+              fontSize: { xs: '1.3rem', sm: '1.7rem', md: '1.5rem' },
               letterSpacing: 0.5,
             }}
           >
@@ -229,7 +230,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <Typography variant="body2" sx={{ color: '#666', fontWeight: 400, fontSize: { xs: '0.95rem', sm: '1.05rem' }, px: 3, pb: 1 }}>
+      <Typography variant="body2" sx={{ color: '#666', fontWeight: 350, fontSize: { xs: '0.95rem', sm: '1rem' }, px: 3, pb: 1 }}>
         Create a new event and assign an event administrator
       </Typography>
 
@@ -254,7 +255,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
 
           
 
-          {/* Event ID Section */}
+          {/* Event ID Section
           <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event Identification
@@ -286,7 +287,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               />
               
             </Box>
-          </Box>
+          </Box> */}
 
           {/* Event Details Section */}
           <Box mb={3}>
@@ -294,7 +295,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               Event Details
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Event Name"
@@ -448,6 +449,80 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               {...register('marketingAbbreviation')}
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
             />
+          </Box>
+
+          {/* Event URL */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+              Event URL
+            </Typography>
+            <TextField
+              fullWidth
+              label="Event URL"
+              {...register('eventUrl')}
+              placeholder="your-event-name"
+              InputProps={{
+                startAdornment: (
+                  <Box 
+                    component="span" 
+                    sx={{ 
+                      color: '#666', 
+                      fontWeight: 500,
+                      fontSize: '0.95rem',
+                      mr: 0.5,
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    https://xpomatch-dev-event-admin-portal.azurewebsites.net/
+                  </Box>
+                ),
+              }}
+              helperText="Enter the URL path after the domain"
+              sx={{ 
+                bgcolor: 'rgba(0, 0, 0, 0.02)', 
+                borderRadius: 2,
+                '& .MuiInputBase-root': {
+                  fontSize: '0.95rem'
+                }
+              }}
+            />
+          </Box>
+
+          {/* Event Logo */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+              Event Logo
+            </Typography>
+            
+            <TextField
+              fullWidth
+              label="Logo Image URL"
+              {...register('eventLogoUrl')}
+              onChange={(e) => handleLogoUrlChange(e.target.value)}
+              placeholder="https://example.com/logo.png"
+              helperText="Enter a direct link to your logo image"
+              sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+            />
+
+            {/* Logo Preview */}
+            {(logoPreview || watchedLogoUrl) && (
+              <Box mt={2} display="flex" alignItems="center" gap={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Preview:
+                </Typography>
+                <Avatar
+                  src={logoPreview || watchedLogoUrl}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 2,
+                    border: '2px solid rgba(0, 0, 0, 0.12)',
+                  }}
+                >
+                  <ImageIcon />
+                </Avatar>
+              </Box>
+            )}
           </Box>
 
           {/* Font and Theme Selection */}
