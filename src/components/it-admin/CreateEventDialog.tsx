@@ -448,7 +448,9 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               label="Marketing Abbreviation"
               {...register('marketingAbbreviation')}
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+              helperText="Abrevation for the event Login username"
             />
+            
           </Box>
 
           {/* Event URL */}
