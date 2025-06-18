@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
 import {
   Box,
   Container,
@@ -50,6 +51,7 @@ import { mockEvent, mockStats } from '@/lib/mockData';
 
 export default function ITAdminDashboard() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [createEventOpen, setCreateEventOpen] = useState(false);
@@ -103,8 +105,24 @@ export default function ITAdminDashboard() {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      if (result.success) {
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        // Force a small delay to ensure state is cleared
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Use window.location for a full page refresh and redirect
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleRowExpand = (eventId: string) => {

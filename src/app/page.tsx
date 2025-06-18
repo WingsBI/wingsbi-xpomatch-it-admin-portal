@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -14,40 +14,55 @@ import {
   InputAdornment,
   Alert,
   Fade,
+  CircularProgress,
 } from '@mui/material';
 import { AdminPanelSettings, Visibility, VisibilityOff, Login } from '@mui/icons-material';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('ritesh@yopmail.com'); // Pre-filled for demo
+  const [password, setPassword] = useState('string'); // Pre-filled for demo
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
+  
+  const { login, isLoading, isAuthenticated, user, error: authError } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.replace('/it-admin/dashboard');
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    setLocalError('');
 
-    // Simple validation without API
+    // Basic validation
     if (!email || !password) {
-      setError('Please fill in all fields');
-      setIsLoading(false);
+      setLocalError('Please fill in all fields');
       return;
     }
 
     if (!email.includes('@')) {
-      setError('Please enter a valid email address');
-      setIsLoading(false);
+      setLocalError('Please enter a valid email address');
       return;
     }
 
-    // Simulate loading for better UX
-    setTimeout(() => {
-      // For demo purposes, any valid email/password combination works
-      router.push('/it-admin/dashboard');
-    }, 1000);
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        // Immediately redirect on successful login
+        router.push('/it-admin/dashboard');
+      } else {
+        setLocalError(result.error || 'Login failed');
+      }
+    } catch (error: any) {
+      setLocalError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', error);
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -179,7 +194,7 @@ export default function HomePage() {
                 Sign In
               </Typography>
 
-              {error && (
+              {(localError || authError) && (
                 <Alert
                   severity="error"
                   sx={{
@@ -192,7 +207,24 @@ export default function HomePage() {
                     },
                   }}
                 >
-                  {error}
+                  {localError || authError}
+                </Alert>
+              )}
+
+              {isAuthenticated && user && (
+                <Alert
+                  severity="success"
+                  sx={{
+                    mb: 2,
+                    background: 'rgba(76, 175, 80, 0.1)',
+                    color: '#2e7d32',
+                    border: '1px solid rgba(76, 175, 80, 0.3)',
+                    '& .MuiAlert-icon': {
+                      color: '#2e7d32',
+                    },
+                  }}
+                >
+                  Welcome back, {user.firstName}! Redirecting to dashboard...
                 </Alert>
               )}
 
@@ -288,7 +320,7 @@ export default function HomePage() {
                   fullWidth
                   variant="contained"
                   disabled={isLoading}
-                  startIcon={isLoading ? null : <Login />}
+                  startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Login />}
                   sx={{
                     mt: 1,
                     py: 1.5,

@@ -24,6 +24,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
+import { useCreateNewEventMutation } from '@/lib/store/api/eventsApi';
 
 const FONT_OPTIONS = [
   { id: 1, label: 'Nunito Sans', fontFamily: 'Nunito Sans, system-ui, sans-serif', className: 'font-nunito' },
@@ -54,93 +55,111 @@ interface CreateEventDialogProps {
 }
 
 interface EventForm {
-  font: number;
-  theme: number;
-  name: string;
+  fontFamilyId: number;
+  themeSelectionId: number;
+  eventName: string;
   description: string;
   startDate: string;
   endDate: string;
   venueName: string;
   addressLine1: string;
   addressLine2: string;
-  country: string;
-  state: string;
-  city: string;
+  postalCode: number;
   googleMapLink: string;
   marketingAbbreviation: string;
   eventUrl: string;
-  eventLogoUrl: string;
+  logoUrl: string;
   eventAdminEmail: string;
   eventAdminFirstName: string;
   eventAdminLastName: string;
-  eventAdminPassword: string;
 }
 
 export default function CreateEventDialog({ open, onClose, onEventCreated }: CreateEventDialogProps) {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [generatedEventId, setGeneratedEventId] = useState('');
   const [closeRotated, setCloseRotated] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>();
+  const [createNewEvent, { isLoading }] = useCreateNewEventMutation();
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>({
+    defaultValues: {
+      fontFamilyId: 1,
+      themeSelectionId: 1,
+      postalCode: 100001,
+    }
+  });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const generateEventId = () => {
-    const id = `EVT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-    setGeneratedEventId(id);
-    return id;
-  };
-
   const onSubmit = async (data: EventForm) => {
-    setLoading(true);
     setError('');
 
     try {
+      // Combine the prefilled domain with user input for eventUrl
+      const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.eventUrl}`;
+      
+      // Map form data to API payload structure
       const payload = {
-        ...data,
+        eventDetails: {
+          eventName: data.eventName,
+          description: data.description,
+          startDate: new Date(data.startDate).toISOString(),
+          endDate: new Date(data.endDate).toISOString(),
+        },
+        location: {
+          venueName: data.venueName,
+          addressLine1: data.addressLine1,
+          addressLine2: data.addressLine2 || '',
+          countryId: 2, // Static ID as requested
+          stateId: 2,   // Static ID as requested  
+          cityId: 1,    // Static ID as requested
+          postalCode: data.postalCode,
+          latitude: 40,  // Static value as in example
+          longitude: 740, // Static value as in example
+          googleMapLink: data.googleMapLink || '',
+        },
+        marketingAbbreviation: data.marketingAbbreviation,
+        themeSelectionId: data.themeSelectionId,
+        fontFamilyId: data.fontFamilyId,
+        eventUrl: fullEventUrl, // Send the combined URL
+        logoUrl: data.logoUrl || '',
+        payment: true, // Static value as in example
+        eventCatalogId: 1, // Static value as in example
+        eventStatusId: 1,  // Static value as in example
+        paymentDetailsId: 1, // Static value as in example
+        eventModeId: 1,    // Static value as in example
+        eventAdministrator: {
+          firstName: data.eventAdminFirstName,
+          lastName: data.eventAdminLastName,
+          email: data.eventAdminEmail,
+        },
       };
 
-      const response = await fetch('/api/it-admin/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const result = await createNewEvent(payload).unwrap();
 
-      const result = await response.json();
-
-      if (result.success) {
+      if (result.statusCode === 200 && !result.isError) {
         onEventCreated();
         handleClose();
       } else {
-        setError(result.error || 'Failed to create event');
+        setError(result.message || 'Failed to create event');
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      setError(err?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
   const handleClose = () => {
     reset();
     setError('');
-    setGeneratedEventId('');
     setLogoPreview('');
     onClose();
-  };
-
-  const handleGenerateId = () => {
-    generateEventId();
   };
 
   const handleLogoUrlChange = (url: string) => {
     setLogoPreview(url);
   };
 
-  const watchedLogoUrl = watch('eventLogoUrl');
+  const watchedLogoUrl = watch('logoUrl');
 
   return (
     <Dialog
@@ -253,42 +272,6 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Alert>
           )}
 
-          
-
-          {/* Event ID Section
-          <Box mb={3}>
-            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
-              Event Identification
-            </Typography>
-            <Box display="flex" gap={2} alignItems="end" flexDirection={{ xs: 'column', sm: 'row' }}>
-              <TextField
-                fullWidth
-                label="Event ID"
-                value={generatedEventId}
-                InputProps={{ readOnly: true }}
-                // helperText="Auto-generated unique identifier"
-                sx={{
-                  bgcolor: 'rgba(0, 0, 0, 0.02)',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-root': {
-                    color: '#1a1a1a',
-                    fontWeight: 700,
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#666',
-                  },
-                  '& .MuiInputBase-input': {
-                    color: '#1a1a1a',
-                  },
-                  '& .MuiFormHelperText-root': {
-                    color: '#666',
-                  },
-                }}
-              />
-              
-            </Box>
-          </Box> */}
-
           {/* Event Details Section */}
           <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
@@ -299,9 +282,9 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 <TextField
                   fullWidth
                   label="Event Name"
-                  {...register('name', { required: 'Event name is required' })}
-                  error={!!errors.name}
-                  helperText={errors.name?.message}
+                  {...register('eventName', { required: 'Event name is required' })}
+                  error={!!errors.eventName}
+                  helperText={errors.eventName?.message}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
@@ -379,53 +362,13 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Country"
-                  select
-                  defaultValue=""
-                  {...register('country', { required: 'Country is required' })}
-                  error={!!errors.country}
-                  helperText={errors.country?.message}
+                  label="Postal Code"
+                  type="number"
+                  {...register('postalCode', { required: 'Postal code is required' })}
+                  error={!!errors.postalCode}
+                  helperText={errors.postalCode?.message}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
-                >
-                  <MenuItem value="">Select Country</MenuItem>
-                  <MenuItem value="India">India</MenuItem>
-                  <MenuItem value="USA">USA</MenuItem>
-                  {/* Add more countries as needed */}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="State"
-                  select
-                  defaultValue=""
-                  {...register('state', { required: 'State is required' })}
-                  error={!!errors.state}
-                  helperText={errors.state?.message}
-                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
-                >
-                  <MenuItem value="">Select State</MenuItem>
-                  <MenuItem value="Maharashtra">Maharashtra</MenuItem>
-                  <MenuItem value="California">California</MenuItem>
-                  {/* Add more states as needed */}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="City"
-                  select
-                  defaultValue=""
-                  {...register('city', { required: 'City is required' })}
-                  error={!!errors.city}
-                  helperText={errors.city?.message}
-                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
-                >
-                  <MenuItem value="">Select City</MenuItem>
-                  <MenuItem value="Mumbai">Mumbai</MenuItem>
-                  <MenuItem value="San Francisco">San Francisco</MenuItem>
-                  {/* Add more cities as needed */}
-                </TextField>
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField
@@ -450,7 +393,6 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
               helperText="Abrevation for the event Login username"
             />
-            
           </Box>
 
           {/* Event URL */}
@@ -499,7 +441,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             <TextField
               fullWidth
               label="Logo Image URL"
-              {...register('eventLogoUrl')}
+              {...register('logoUrl')}
               onChange={(e) => handleLogoUrlChange(e.target.value)}
               placeholder="https://example.com/logo.png"
               helperText="Enter a direct link to your logo image"
@@ -536,7 +478,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   fullWidth
                   label="Font Family"
                   defaultValue={1}
-                  {...register('font', { required: 'Font is required', valueAsNumber: true })}
+                  {...register('fontFamilyId', { required: 'Font is required', valueAsNumber: true })}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                   SelectProps={{
                     MenuProps: {
@@ -581,7 +523,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   fullWidth
                   label="Theme Selection"
                   defaultValue={1}
-                  {...register('theme', { required: 'Theme is required', valueAsNumber: true })}
+                  {...register('themeSelectionId', { required: 'Theme is required', valueAsNumber: true })}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 >
                   {THEME_OPTIONS.map(theme => (
@@ -683,35 +625,6 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   }}
                 />
               </Grid>
-              <Grid item xs={12}>
-                {/* <TextField
-                  fullWidth
-                  label="Temporary Password"
-                  type="password"
-                  {...register('eventAdminPassword', { 
-                    required: 'Password is required',
-                    minLength: { value: 8, message: 'Password must be at least 8 characters' }
-                  })}
-                  error={!!errors.eventAdminPassword}
-                  helperText={errors.eventAdminPassword?.message || 'Event admin will be required to change this on first login'}
-                  sx={{
-                    bgcolor: 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      color: '#1a1a1a',
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: '#666',
-                    },
-                    '& .MuiInputBase-input': {
-                      color: '#1a1a1a',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#d32f2f',
-                    },
-                  }}
-                /> */}
-              </Grid>
             </Grid>
           </Box>
         
@@ -719,7 +632,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         <DialogActions sx={{ p: { xs: 2, sm: 2, md: 1.5}, zIndex: 1, flexWrap: 'wrap', gap: 1 }}>
           <Button
             onClick={handleClose}
-            disabled={loading}
+            disabled={isLoading}
             sx={{
               borderRadius: 2,
               color: '#666',
@@ -740,7 +653,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !generatedEventId}
+            disabled={isLoading}
             sx={{
               minWidth: 120,
               borderRadius: 2,
@@ -763,7 +676,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               transition: 'all 0.3s ease',
             }}
           >
-            {loading ? 'Creating...' : 'Create Event'}
+            {isLoading ? 'Creating...' : 'Create Event'}
           </Button>
         </DialogActions>
         </DialogContent>
