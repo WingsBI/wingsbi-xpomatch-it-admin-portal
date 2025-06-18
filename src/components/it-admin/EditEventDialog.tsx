@@ -83,7 +83,7 @@ export default function EditEventDialog({ open, onClose, onEventUpdated, event }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [logoPreview, setLogoPreview] = useState<string>('');
-
+  const [closeRotated, setCloseRotated] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<EventEditForm>();
 
   const theme = useTheme();
@@ -202,8 +202,19 @@ export default function EditEventDialog({ open, onClose, onEventUpdated, event }
         </Box>
         <IconButton
           aria-label="close"
-          onClick={handleClose}
-          sx={{ ml: 2 }}
+          onClick={() => {
+            setCloseRotated(true);
+            setTimeout(() => {
+              setCloseRotated(false);
+              handleClose();
+            }, 300);
+          }
+
+          }
+          sx={{ ml: 2,
+            transition: 'transform 0.3s',
+            transform: closeRotated ? 'rotate(180deg)' : 'none',
+          }}
         >
           <CloseIcon />
         </IconButton>
