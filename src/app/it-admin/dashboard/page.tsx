@@ -27,6 +27,7 @@ import {
   Divider,
   Fade,
   Grow,
+  Collapse,
 } from '@mui/material';
 import { 
   Add, 
@@ -38,9 +39,13 @@ import {
   Settings,
   Notifications,
   TrendingUp,
+  ExpandMore,
+  ExpandLess,
+  Visibility,
 } from '@mui/icons-material';
 import { Event, DashboardStats } from '@/types';
 import CreateEventDialog from '@/components/it-admin/CreateEventDialog';
+import EditEventDialog from '@/components/it-admin/EditEventDialog';
 import { mockEvent, mockStats } from '@/lib/mockData';
 
 export default function ITAdminDashboard() {
@@ -48,8 +53,11 @@ export default function ITAdminDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [editEventOpen, setEditEventOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -71,8 +79,19 @@ export default function ITAdminDashboard() {
     setCreateEventOpen(true);
   };
 
+  const handleEditEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setEditEventOpen(true);
+  };
+
   const handleEventCreated = () => {
     setCreateEventOpen(false);
+    fetchDashboardData();
+  };
+
+  const handleEventUpdated = () => {
+    setEditEventOpen(false);
+    setSelectedEvent(null);
     fetchDashboardData();
   };
 
@@ -86,6 +105,10 @@ export default function ITAdminDashboard() {
 
   const handleLogout = () => {
     router.push('/');
+  };
+
+  const handleRowExpand = (eventId: string) => {
+    setExpandedRow(expandedRow === eventId ? null : eventId);
   };
 
   const getStatusColor = (status: string) => {
@@ -105,8 +128,6 @@ export default function ITAdminDashboard() {
       day: 'numeric',
     });
   };
-
-
 
   return (
     <Box sx={{ 
@@ -142,7 +163,7 @@ export default function ITAdminDashboard() {
             </Box>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-                AI Matchmaking Platform
+                Xpo Match Platform
               </Typography>
               <Typography variant="body2" sx={{ color: '#666', fontSize: '0.875rem' }}>
                 IT Administrator Dashboard
@@ -224,8 +245,6 @@ export default function ITAdminDashboard() {
           </Box>
         </Fade> */}
 
-
-
         {/* Events Management */}
         <Fade in timeout={1200}>
           <Card
@@ -238,9 +257,9 @@ export default function ITAdminDashboard() {
           >
             <Box
               sx={{
-                background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
+                background: 'linear-gradient(135deg,rgb(102, 125, 230) 0%,rgb(130, 178, 218) 100%)',
                 color: 'white',
-                p: 3,
+                p: 2.5,
               }}
             >
               <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -248,7 +267,7 @@ export default function ITAdminDashboard() {
                   <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
                     Events Management
                   </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 500, opacity: 0.7 }}>
                     Create and manage your events efficiently
                   </Typography>
                 </Box>
@@ -262,8 +281,8 @@ export default function ITAdminDashboard() {
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                     color: 'white',
                     fontWeight: 600,
-                    px: 3,
-                    py: 1.5,
+                    px: 2.5,
+                    py: 1,
                     '&:hover': {
                       bgcolor: 'rgba(255, 255, 255, 0.3)',
                       transform: 'translateY(-2px)',
@@ -281,120 +300,195 @@ export default function ITAdminDashboard() {
                   <TableHead>
                     <TableRow sx={{ bgcolor: '#f8f9fa' }}>
                       <TableCell sx={{ fontWeight: 600, py: 2 }}>Event Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Event ID</TableCell>
                       <TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>End Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Venue</TableCell>
                       <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Event Admin</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Participants</TableCell>
                       <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {events.map((event) => (
-                      <TableRow 
-                        key={event.id} 
-                        hover
-                        sx={{
-                          '&:hover': {
-                            bgcolor: '#f8f9ff',
-                          },
-                        }}
-                      >
-                        <TableCell sx={{ py: 3 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            {event.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {event.location}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography 
-                            variant="body2" 
+                      <>
+                        <TableRow 
+                          key={event.id} 
+                          hover
+                          sx={{
+                            '&:hover': {
+                              bgcolor: '#f8f9ff',
+                            },
+                          }}
+                        >
+                          <TableCell sx={{ py: 3 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              {event.name}
+                            </Typography>
+                            
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {formatDate(event.startDate)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {formatDate(event.endDate)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {event.location}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={event.status}
+                              color={getStatusColor(event.status) as any}
+                              size="small"
+                              sx={{ 
+                                textTransform: 'capitalize',
+                                fontWeight: 600,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <IconButton 
+                                size="small" 
+                                color="primary"
+                                onClick={() => handleEditEvent(event)}
+                                sx={{
+                                  '&:hover': { 
+                                    bgcolor: 'primary.light',
+                                    color: 'white',
+                                  },
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                              {/* <IconButton 
+                                size="small" 
+                                color="info"
+                                sx={{
+                                  '&:hover': { 
+                                    bgcolor: 'info.light',
+                                    color: 'white',
+                                  },
+                                }}
+                              >
+                                <Email fontSize="small" />
+                              </IconButton> */}
+                              <IconButton 
+                                size="small" 
+                                onClick={() => handleRowExpand(event.id)}
+                                color="primary"
+                                sx={{
+                                  '&:hover': { 
+                                    bgcolor: 'primary.light',
+                                    color: 'white',
+                                  },
+                                }}
+                              >
+                                {expandedRow === event.id ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                        
+                        {/* Expanded Row with Additional Columns */}
+                        <TableRow>
+                          <TableCell 
+                            colSpan={6} 
                             sx={{ 
-                              fontFamily: 'monospace',
-                              bgcolor: '#f5f5f5',
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1,
-                              display: 'inline-block',
+                              py: 0, 
+                              borderBottom: expandedRow === event.id ? '1px solid rgba(224, 224, 224, 1)' : 'none' 
                             }}
                           >
-                            {event.eventId}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {formatDate(event.startDate)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={event.status}
-                            color={getStatusColor(event.status) as any}
-                            size="small"
-                            sx={{ 
-                              textTransform: 'capitalize',
-                              fontWeight: 600,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {event.eventAdminId ? (
-                            <Chip
-                              label="Assigned"
-                              color="success"
-                              size="small"
-                              sx={{ fontWeight: 600 }}
-                            />
-                          ) : (
-                            <Chip
-                              label="Not Assigned"
-                              color="warning"
-                              size="small"
-                              sx={{ fontWeight: 600 }}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            V: 6 | E: 4
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Box display="flex" gap={1}>
-                            <IconButton 
-                              size="small" 
-                              color="primary"
-                              sx={{
-                                '&:hover': { 
-                                  bgcolor: 'primary.light',
-                                  color: 'white',
-                                },
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton 
-                              size="small" 
-                              color="info"
-                              sx={{
-                                '&:hover': { 
-                                  bgcolor: 'info.light',
-                                  color: 'white',
-                                },
-                              }}
-                            >
-                              <Email fontSize="small" />
-                            </IconButton>
-                            
-                          </Box>
-                        </TableCell>
-                      </TableRow>
+                            <Collapse in={expandedRow === event.id} timeout="auto" unmountOnExit>
+                              <Box sx={{ margin: 1 }}>
+                                {/* Additional Columns Table Header */}
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow sx={{ bgcolor: '#f0f0f0' }}>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Marketing Abbreviative</TableCell>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Logo</TableCell>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Font Family</TableCell>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Theme</TableCell>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Admin</TableCell>
+                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Email</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    <TableRow>
+                                      <TableCell sx={{ py: 2 }}>
+                                        <Typography 
+                                          variant="body2" 
+                                          sx={{ 
+                                            fontFamily: 'monospace',
+                                            bgcolor: '#f5f5f5',
+                                            px: 1,
+                                            py: 0.5,
+                                            borderRadius: 1,
+                                            display: 'inline-block',
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          {event.marketingAbbreviation || 'N/A'}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Avatar 
+                                          src={event.eventLogo} 
+                                          sx={{ 
+                                            width: 40, 
+                                            height: 40,
+                                            borderRadius: 2,
+                                          }}
+                                        >
+                                          <EventIcon />
+                                        </Avatar>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                          {event.fontFamily || 'Default'}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Chip
+                                          label={event.theme || 'Default'}
+                                          variant="outlined"
+                                          size="small"
+                                          sx={{ fontWeight: 500 }}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        {event.eventAdminFirstName && event.eventAdminLastName ? (
+                                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                            {`${event.eventAdminFirstName} ${event.eventAdminLastName}`}
+                                          </Typography>
+                                        ) : (
+                                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                                            N/A
+                                          </Typography>
+                                        )}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                          {event.eventAdminEmail || 'N/A'}
+                                        </Typography>
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableBody>
+                                </Table>
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      </>
                     ))}
                     {events.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                           <Box>
                             <EventIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
                             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
@@ -419,6 +513,14 @@ export default function ITAdminDashboard() {
           open={createEventOpen}
           onClose={() => setCreateEventOpen(false)}
           onEventCreated={handleEventCreated}
+        />
+
+        {/* Edit Event Dialog */}
+        <EditEventDialog
+          open={editEventOpen}
+          onClose={() => setEditEventOpen(false)}
+          onEventUpdated={handleEventUpdated}
+          event={selectedEvent}
         />
       </Container>
     </Box>

@@ -21,8 +21,14 @@ export interface Event {
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   createdBy: string; // IT Admin ID
   eventAdminId?: string;
+  eventAdminFirstName?: string;
+  eventAdminLastName?: string;
+  eventAdminEmail?: string;
   customAttributes: CustomAttribute[];
   marketingAbbreviation?: string;
+  eventLogo?: string;
+  fontFamily?: string;
+  theme?: string;
   createdAt: Date;
   updatedAt: Date;
 }
