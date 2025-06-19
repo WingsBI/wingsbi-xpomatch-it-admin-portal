@@ -29,6 +29,7 @@ import {
   Fade,
   Grow,
   Collapse,
+  CircularProgress,
 } from '@mui/material';
 import { 
   Add, 
@@ -48,6 +49,7 @@ import { Event, DashboardStats } from '@/types';
 import CreateEventDialog from '@/components/it-admin/CreateEventDialog';
 import EditEventDialog from '@/components/it-admin/EditEventDialog';
 import { mockEvent, mockStats } from '@/lib/mockData';
+import { useGetAllEventsQuery, EventFromAPI } from '@/lib/store/api/eventsApi';
 
 export default function ITAdminDashboard() {
   const router = useRouter();
@@ -57,24 +59,61 @@ export default function ITAdminDashboard() {
   const [createEventOpen, setCreateEventOpen] = useState(false);
   const [editEventOpen, setEditEventOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
+  // Fetch events using the real API
+  const { data: eventsResponse, isLoading, error, refetch } = useGetAllEventsQuery();
+
+  // Function to map API response to Event interface
+  const mapApiEventToEvent = (apiEvent: EventFromAPI): Event => {
+    // Map eventStatusId to readable status
+    const getStatusFromId = (statusId: number): 'draft' | 'active' | 'completed' | 'cancelled' => {
+      switch (statusId) {
+        case 1: return 'active';
+        case 2: return 'draft';
+        case 3: return 'completed';
+        case 4: return 'cancelled';
+        default: return 'draft';
+      }
+    };
+
+    return {
+      id: apiEvent.id.toString(),
+      eventId: apiEvent.identifier || apiEvent.id.toString(),
+      name: apiEvent.title,
+      description: apiEvent.description,
+      startDate: new Date(apiEvent.startDateTime),
+      endDate: new Date(apiEvent.enddatetime),
+      location: 'N/A', // Not provided in API response
+      status: getStatusFromId(apiEvent.eventStatusId),
+      createdBy: apiEvent.createdBy.toString(),
+      eventAdminId: apiEvent.eventAdministratorId.toString(),
+      eventAdminFirstName: apiEvent.firstName,
+      eventAdminLastName: apiEvent.lastName,
+      eventAdminEmail: apiEvent.email,
+      customAttributes: [],
+      marketingAbbreviation: apiEvent.marketingAbbreviation,
+      eventLogo: undefined, // Not provided in API response
+      fontFamily: undefined, // Not provided in API response
+      theme: undefined, // Not provided in API response
+      createdAt: new Date(apiEvent.createdDate),
+      updatedAt: new Date(apiEvent.modifiedDate || apiEvent.createdDate),
+    };
+  };
+
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (eventsResponse?.result) {
+      const mappedEvents = eventsResponse.result.map(mapApiEventToEvent);
+      setEvents(mappedEvents);
+    }
+    // Set mock stats for now since we don't have a stats API
+    setStats(mockStats);
+  }, [eventsResponse]);
 
   const fetchDashboardData = async () => {
-    try {
-      // Using mock data for demonstration
-      setEvents([mockEvent]);
-      setStats(mockStats);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Refetch the events data
+    refetch();
   };
 
   const handleCreateEvent = () => {
@@ -313,16 +352,83 @@ export default function ITAdminDashboard() {
             </Box>
 
             <CardContent sx={{ p: 0 }}>
-              <TableContainer>
-                <Table>
+              <TableContainer sx={{ maxHeight: 430, overflow: 'auto' }}>
+                <Table stickyHeader>
                   <TableHead>
-                    <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-                      <TableCell sx={{ fontWeight: 600, py: 2 }}>Event Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>End Date</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Venue</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    <TableRow sx={{ bgcolor: '#d9dadb' }}>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600, 
+                          py: 2,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        Event Name
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        Start Date
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        End Date
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        Venue
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: 0,
+                          bgcolor: '#d9dadb',
+                          zIndex: 10,
+                          borderBottom: '2px solid #bbb'
+                        }}
+                      >
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -407,118 +513,149 @@ export default function ITAdminDashboard() {
                                   },
                                 }}
                               >
-                                {expandedRow === event.id ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
-                              </IconButton>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                        
-                        {/* Expanded Row with Additional Columns */}
-                        <TableRow>
-                          <TableCell 
-                            colSpan={6} 
-                            sx={{ 
-                              py: 0, 
-                              borderBottom: expandedRow === event.id ? '1px solid rgba(224, 224, 224, 1)' : 'none' 
-                            }}
-                          >
-                            <Collapse in={expandedRow === event.id} timeout="auto" unmountOnExit>
-                              <Box sx={{ margin: 1 }}>
-                                {/* Additional Columns Table Header */}
-                                <Table size="small">
-                                  <TableHead>
-                                    <TableRow sx={{ bgcolor: '#f0f0f0' }}>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Marketing Abbreviative</TableCell>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Logo</TableCell>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Font Family</TableCell>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Theme</TableCell>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Admin</TableCell>
-                                      <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Email</TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                    <TableRow>
-                                      <TableCell sx={{ py: 2 }}>
-                                        <Typography 
-                                          variant="body2" 
-                                          sx={{ 
-                                            fontFamily: 'monospace',
-                                            bgcolor: '#f5f5f5',
-                                            px: 1,
-                                            py: 0.5,
-                                            borderRadius: 1,
-                                            display: 'inline-block',
-                                            fontWeight: 600,
-                                          }}
-                                        >
-                                          {event.marketingAbbreviation || 'N/A'}
-                                        </Typography>
-                                      </TableCell>
-                                      <TableCell>
-                                        <Avatar 
-                                          src={event.eventLogo} 
-                                          sx={{ 
-                                            width: 40, 
-                                            height: 40,
-                                            borderRadius: 2,
-                                          }}
-                                        >
-                                          <EventIcon />
-                                        </Avatar>
-                                      </TableCell>
-                                      <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                          {event.fontFamily || 'Default'}
-                                        </Typography>
-                                      </TableCell>
-                                      <TableCell>
-                                        <Chip
-                                          label={event.theme || 'Default'}
-                                          variant="outlined"
-                                          size="small"
-                                          sx={{ fontWeight: 500 }}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        {event.eventAdminFirstName && event.eventAdminLastName ? (
-                                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                            {`${event.eventAdminFirstName} ${event.eventAdminLastName}`}
-                                          </Typography>
-                                        ) : (
-                                          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-                                            N/A
-                                          </Typography>
-                                        )}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                          {event.eventAdminEmail || 'N/A'}
-                                        </Typography>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
-                              </Box>
-                            </Collapse>
-                          </TableCell>
-                        </TableRow>
-                      </>
-                    ))}
-                    {events.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                          <Box>
-                            <EventIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                              No events created yet
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Create your first event to get started with the platform
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    )}
+                                                        {expandedRow === event.id ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+                
+                {/* Expanded Row with Additional Columns */}
+                <TableRow>
+                  <TableCell 
+                    colSpan={6} 
+                    sx={{ 
+                      py: 0, 
+                      borderBottom: expandedRow === event.id ? '1px solid rgba(224, 224, 224, 1)' : 'none' 
+                    }}
+                  >
+                    <Collapse in={expandedRow === event.id} timeout="auto" unmountOnExit>
+                      <Box sx={{ margin: 1 }}>
+                        {/* Additional Columns Table Header */}
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow sx={{ bgcolor: '#f0f0f0' }}>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Marketing Abbreviative</TableCell>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Logo</TableCell>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Font Family</TableCell>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Theme</TableCell>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Admin</TableCell>
+                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Email</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell sx={{ py: 2 }}>
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    fontFamily: 'monospace',
+                                    bgcolor: '#f5f5f5',
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: 1,
+                                    display: 'inline-block',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {event.marketingAbbreviation || 'N/A'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Avatar 
+                                  src={event.eventLogo} 
+                                  sx={{ 
+                                    width: 40, 
+                                    height: 40,
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  <EventIcon />
+                                </Avatar>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {event.fontFamily || 'Default'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={event.theme || 'Default'}
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{ fontWeight: 500 }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                {event.eventAdminFirstName && event.eventAdminLastName ? (
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {`${event.eventAdminFirstName} ${event.eventAdminLastName}`}
+                                  </Typography>
+                                ) : (
+                                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                                    N/A
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {event.eventAdminEmail || 'N/A'}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </>
+            ))}
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <CircularProgress size={40} />
+                  <Typography variant="body1" sx={{ mt: 2 }}>
+                    Loading events...
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {error && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <Box>
+                    <Typography variant="h6" color="error" sx={{ mb: 1 }}>
+                      Error loading events
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Please try refreshing the page or contact support
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      color="primary" 
+                      onClick={() => refetch()}
+                    >
+                      Retry
+                    </Button>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !error && events.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <Box>
+                    <EventIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                      No events created yet
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Create your first event to get started with the platform
+                    </Typography>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
                   </TableBody>
                 </Table>
               </TableContainer>
