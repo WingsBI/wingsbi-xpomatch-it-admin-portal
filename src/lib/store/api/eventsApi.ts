@@ -15,6 +15,43 @@ export interface Event {
   updatedAt: string;
 }
 
+// New Event interface matching the API response
+export interface EventFromAPI {
+  id: number;
+  title: string;
+  description: string;
+  paymentDetailsId: number;
+  eventCategoryId: number;
+  eventModeId: number;
+  eventStatusId: number;
+  startDateTime: string;
+  enddatetime: string;
+  isActive: boolean;
+  createdBy: number;
+  createdDate: string;
+  modifiedBy: number;
+  modifiedDate: string;
+  payment: boolean;
+  eventAdministratorId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  roleId: number;
+  roleName: string;
+  eventDatabaseMappingId: number;
+  marketingAbbreviation: string;
+  identifier: string;
+}
+
+export interface GetAllEventsResponse {
+  version: string;
+  statusCode: number;
+  message: string;
+  isError: boolean;
+  responseException: null | string;
+  result: EventFromAPI[];
+}
+
 export interface CreateEventRequest {
   title: string;
   description: string;
@@ -101,6 +138,12 @@ export const eventsApi = baseApi.injectEndpoints({
       providesTags: ['Event'],
     }),
 
+    // GET - Fetch all events from new API endpoint
+    getAllEvents: builder.query<GetAllEventsResponse, void>({
+      query: () => '/api/Event/getAllEvents',
+      providesTags: ['Event'],
+    }),
+
     // GET - Fetch single event by ID
     getEventById: builder.query<EventResponse, string>({
       query: (id) => `/api/Events/${id}`,
@@ -161,6 +204,7 @@ export const eventsApi = baseApi.injectEndpoints({
 
 export const {
   useGetEventsQuery,
+  useGetAllEventsQuery,
   useGetEventByIdQuery,
   useCreateEventMutation,
   useCreateNewEventMutation,

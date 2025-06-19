@@ -18,6 +18,9 @@ import {
   Alert,
   IconButton,
   Avatar,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -54,6 +57,12 @@ interface CreateEventDialogProps {
   onEventCreated: () => void;
 }
 
+interface NotificationState {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error';
+}
+
 interface EventForm {
   fontFamilyId: number;
   themeSelectionId: number;
@@ -78,6 +87,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   const [error, setError] = useState('');
   const [closeRotated, setCloseRotated] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
+  const [notification, setNotification] = useState<NotificationState>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const [createNewEvent, { isLoading }] = useCreateNewEventMutation();
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>({
@@ -138,13 +152,26 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
       const result = await createNewEvent(payload).unwrap();
 
       if (result.statusCode === 200 && !result.isError) {
+        // Show success message
+        setNotification({
+          open: true,
+          message: 'Event created successfully!',
+          severity: 'success'
+        });
         onEventCreated();
         handleClose();
       } else {
         setError(result.message || 'Failed to create event');
       }
     } catch (err: any) {
-      setError(err?.data?.message || 'An error occurred. Please try again.');
+      const errorMessage = err?.data?.message || 'An error occurred. Please try again.';
+      setError(errorMessage);
+      // Show error notification
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     }
   };
 
@@ -159,35 +186,49 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     setLogoPreview(url);
   };
 
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  const handleDialogClose = (event: any, reason: string) => {
+    // Prevent closing dialog when loading or clicking outside
+    if (isLoading || reason === 'backdropClick') {
+      return;
+    }
+    handleClose();
+  };
+
   const watchedLogoUrl = watch('logoUrl');
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          position: 'relative',
-          overflow: 'visible',
-          borderRadius: { xs: 0, sm: 4 },
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(18px)',
-          border: '1px solid rgba(0, 0, 0, 0.08)',
-          m: { xs: 0, sm: 2 },
-        },
-      }}
-      BackdropProps={{
-        sx: {
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(2px)',
-        },
-      }}
-      TransitionProps={{ appear: true }}
-    >
+    <>
+      <Dialog
+        open={open}
+        onClose={handleDialogClose}
+        disableEscapeKeyDown={isLoading}
+        maxWidth="md"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            position: 'relative',
+            overflow: 'visible',
+            borderRadius: { xs: 0, sm: 4 },
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(18px)',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            m: { xs: 0, sm: 2 },
+          },
+        }}
+        BackdropProps={{
+          sx: {
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(2px)',
+          },
+        }}
+        TransitionProps={{ appear: true }}
+      >
       {/* Decorative blurred circles */}
       <Box
         sx={{
@@ -233,17 +274,21 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         </Box>
         <IconButton
           aria-label="close"
+          disabled={isLoading}
           onClick={() => {
-            setCloseRotated(true);
-            setTimeout(() => {
-              setCloseRotated(false);
-              handleClose();
-            }, 300);
+            if (!isLoading) {
+              setCloseRotated(true);
+              setTimeout(() => {
+                setCloseRotated(false);
+                handleClose();
+              }, 300);
+            }
           }}
           sx={{
             ml: 2,
             transition: 'transform 0.3s',
             transform: closeRotated ? 'rotate(180deg)' : 'none',
+            opacity: isLoading ? 0.5 : 1,
           }}
         >
           <CloseIcon />
@@ -391,7 +436,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               label="Marketing Abbreviation"
               {...register('marketingAbbreviation')}
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
-              helperText="Abrevation for the event Login username"
+              helperText="Abrevation can be used for the event Login username. (e.g. 'XPO' for 'XPO Match')"
             />
           </Box>
 
@@ -681,6 +726,53 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         </DialogActions>
         </DialogContent>
       </form>
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <Backdrop
+          sx={{
+            position: 'absolute',
+            zIndex: 9999,
+            color: '#fff',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            borderRadius: { xs: 0, sm: 4 },
+          }}
+          open={isLoading}
+        >
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <CircularProgress color="inherit" size={50} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Creating Event...
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, textAlign: 'center' }}>
+              Please wait while we set up your event
+            </Typography>
+          </Box>
+        </Backdrop>
+      )}
     </Dialog>
+
+    {/* Success/Error Notification */}
+    <Snackbar
+      open={notification.open}
+      autoHideDuration={6000}
+      onClose={handleCloseNotification}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+    >
+      <Alert 
+        onClose={handleCloseNotification} 
+        severity={notification.severity}
+        sx={{ 
+          width: '100%',
+          fontWeight: 600,
+          '& .MuiAlert-icon': {
+            fontSize: '1.5rem'
+          }
+        }}
+      >
+        {notification.message}
+      </Alert>
+    </Snackbar>
+  </>
   );
 } 

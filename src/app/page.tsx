@@ -21,19 +21,20 @@ import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
-  const [email, setEmail] = useState('ritesh@yopmail.com'); // Pre-filled for demo
-  const [password, setPassword] = useState('string'); // Pre-filled for demo
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [hasManuallyLoggedIn, setHasManuallyLoggedIn] = useState(false);
   
   const { login, isLoading, isAuthenticated, user, error: authError } = useAuth();
 
-  // Redirect if already authenticated
+  // Only redirect if user has manually logged in, not on auto-authentication from stored tokens
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && hasManuallyLoggedIn) {
       router.replace('/it-admin/dashboard');
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, hasManuallyLoggedIn, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,16 +52,19 @@ export default function HomePage() {
     }
 
     try {
+      setHasManuallyLoggedIn(true); // Mark as manual login attempt
       const result = await login(email, password);
       
       if (result.success) {
-        // Immediately redirect on successful login
-        router.push('/it-admin/dashboard');
+        // The useEffect will handle the redirect automatically
+        // No need to manually redirect here since useEffect will handle it
       } else {
         setLocalError(result.error || 'Login failed');
+        setHasManuallyLoggedIn(false); // Reset if login failed
       }
     } catch (error: any) {
       setLocalError('An unexpected error occurred. Please try again.');
+      setHasManuallyLoggedIn(false); // Reset if login failed
       console.error('Login error:', error);
     }
   };
@@ -211,7 +215,7 @@ export default function HomePage() {
                 </Alert>
               )}
 
-              {isAuthenticated && user && (
+              {/* {isAuthenticated && user && (
                 <Alert
                   severity="success"
                   sx={{
@@ -226,7 +230,7 @@ export default function HomePage() {
                 >
                   Welcome back, {user.firstName}! Redirecting to dashboard...
                 </Alert>
-              )}
+              )} */}
 
               <Box component="form" onSubmit={handleLogin}
               sx={{ 
