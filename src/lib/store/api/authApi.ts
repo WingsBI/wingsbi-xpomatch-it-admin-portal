@@ -59,6 +59,14 @@ export const authApi = baseApi.injectEndpoints({
                 const decodedToken = jwtDecode<UserProfile>(token);
                 localStorage.setItem('userProfile', JSON.stringify(decodedToken));
                 
+                // Import and dispatch setCredentials action to update Redux state
+                const { setCredentials } = await import('../slices/authSlice');
+                dispatch(setCredentials({
+                  user: decodedToken,
+                  token,
+                  refreshToken
+                }));
+                
                 // Update auth state
                 dispatch(authApi.util.invalidateTags(['Auth', 'User']));
               } catch (error) {
@@ -95,6 +103,14 @@ export const authApi = baseApi.injectEndpoints({
               try {
                 const decodedToken = jwtDecode<UserProfile>(token);
                 localStorage.setItem('userProfile', JSON.stringify(decodedToken));
+                
+                // Update Redux state with new credentials
+                const { setCredentials } = await import('../slices/authSlice');
+                dispatch(setCredentials({
+                  user: decodedToken,
+                  token,
+                  refreshToken
+                }));
               } catch (error) {
                 console.error('Error decoding refreshed token:', error);
               }
@@ -123,7 +139,7 @@ export const authApi = baseApi.injectEndpoints({
 
     // Logout
     logout: builder.mutation<void, void>({
-      queryFn: () => {
+      queryFn: async (arg, api) => {
         if (typeof window !== 'undefined') {
           // Clear all auth-related localStorage items
           localStorage.removeItem('authToken');
@@ -146,6 +162,14 @@ export const authApi = baseApi.injectEndpoints({
           document.cookie.split(";").forEach(function(c) { 
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
           });
+          
+          // Update Redux state
+          try {
+            const { logOut } = await import('../slices/authSlice');
+            api.dispatch(logOut());
+          } catch (error) {
+            console.error('Error clearing auth state:', error);
+          }
         }
         return { data: undefined };
       },
