@@ -110,7 +110,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
 
     try {
       // Combine the prefilled domain with user input for eventUrl
-      const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.eventUrl}`;
+      const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.marketingAbbreviation}`;
       
       // Map form data to API payload structure
       const payload = {
@@ -441,7 +441,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           </Box>
 
           {/* Event URL */}
-          <Box mb={3}>
+          {/* <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event URL
             </Typography>
@@ -475,7 +475,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 }
               }}
             />
-          </Box>
+          </Box> */}
 
           {/* Event Logo */}
           <Box mb={3}>
@@ -727,26 +727,168 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         </DialogContent>
       </form>
 
-      {/* Loading Overlay */}
+      {/* Professional Loading Overlay */}
       {isLoading && (
         <Backdrop
           sx={{
             position: 'absolute',
             zIndex: 9999,
-            color: '#fff',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(8px)',
             borderRadius: { xs: 0, sm: 4 },
           }}
           open={isLoading}
         >
-          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-            <CircularProgress color="inherit" size={50} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Creating Event...
+          <Box 
+            display="flex" 
+            flexDirection="column" 
+            alignItems="center" 
+            gap={3}
+            sx={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 3,
+              p: 4,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            {/* Professional Animated Loader */}
+            <Box
+              sx={{
+                position: 'relative',
+                width: 80,
+                height: 80,
+              }}
+            >
+              {/* Outer rotating ring */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: '3px solid rgba(255, 255, 255, 0.1)',
+                  borderTop: '3px solid #60a5fa',
+                  borderRadius: '50%',
+                  animation: 'spin 2s linear infinite',
+                  '@keyframes spin': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' },
+                  },
+                }}
+              />
+              
+              {/* Middle rotating ring */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  left: 8,
+                  width: 'calc(100% - 16px)',
+                  height: 'calc(100% - 16px)',
+                  border: '2px solid rgba(255, 255, 255, 0.1)',
+                  borderRight: '2px solid #3b82f6',
+                  borderRadius: '50%',
+                  animation: 'spin-reverse 1.5s linear infinite',
+                  '@keyframes spin-reverse': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(-360deg)' },
+                  },
+                }}
+              />
+              
+              {/* Inner pulsing dot */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: 12,
+                  height: 12,
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                  borderRadius: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  animation: 'pulse 1s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { 
+                      transform: 'translate(-50%, -50%) scale(1)',
+                      opacity: 1,
+                    },
+                    '50%': { 
+                      transform: 'translate(-50%, -50%) scale(1.5)',
+                      opacity: 0.7,
+                    },
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Professional Loading Text */}
+            <Box textAlign="center">
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  fontSize: '1.25rem',
+                  letterSpacing: 0.5,
+                  mb: 1,
+                }}
+              >
+                Creating Your Event
+              </Typography>
+              
+              {/* Animated dots */}
+              <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  Setting up your event space
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.8, textAlign: 'center' }}>
-              Please wait while we set up your event
+                <Box display="flex" gap={0.5} ml={1}>
+                  {[0, 1, 2].map((i) => (
+                    <Box
+                      key={i}
+                      sx={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: '50%',
+                        backgroundColor: '#60a5fa',
+                        animation: `bounce 1.4s ease-in-out ${i * 0.16}s infinite`,
+                        '@keyframes bounce': {
+                          '0%, 80%, 100%': {
+                            transform: 'scale(0)',
+                            opacity: 0.5,
+                          },
+                          '40%': {
+                            transform: 'scale(1)',
+                            opacity: 1,
+                          },
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+              
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.85rem',
+                  mt: 1.5,
+                  fontStyle: 'italic',
+                }}
+              >
+                This may take a few moments...
             </Typography>
+            </Box>
           </Box>
         </Backdrop>
       )}
