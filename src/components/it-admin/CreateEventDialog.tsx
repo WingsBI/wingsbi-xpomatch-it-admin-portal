@@ -110,7 +110,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
 
     try {
       // Combine the prefilled domain with user input for eventUrl
-      const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.marketingAbbreviation}`;
+      const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.eventUrl}`;
       
       // Map form data to API payload structure
       const payload = {
@@ -132,7 +132,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           longitude: 740, // Static value as in example
           googleMapLink: data.googleMapLink || '',
         },
-        marketingAbbreviation: data.marketingAbbreviation,
+        marketingAbbreviation: data.eventUrl,
         themeSelectionId: data.themeSelectionId,
         fontFamilyId: data.fontFamilyId,
         eventUrl: fullEventUrl, // Send the combined URL
@@ -427,7 +427,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           </Box>
 
           {/* Marketing Abbreviation */}
-          <Box mb={3}>
+          {/* <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Marketing Abbreviation
             </Typography>
@@ -438,10 +438,10 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
               helperText="Abrevation can be used for the event Login username. (e.g. 'XPO' for 'XPO Match')"
             />
-          </Box>
+          </Box> */}
 
           {/* Event URL */}
-          {/* <Box mb={3}>
+          <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Event URL
             </Typography>
@@ -475,7 +475,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 }
               }}
             />
-          </Box> */}
+          </Box>
 
           {/* Event Logo */}
           <Box mb={3}>
