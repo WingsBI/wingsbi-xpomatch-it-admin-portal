@@ -51,7 +51,6 @@ const THEME_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft' },
   { value: 'active', label: 'Active' },
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },

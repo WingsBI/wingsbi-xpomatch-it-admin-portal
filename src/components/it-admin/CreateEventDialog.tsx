@@ -40,15 +40,11 @@ const FONT_OPTIONS = [
 ];
 const THEME_OPTIONS = [
   { id: 1, label: 'Ocean Blue', color: '#1976d2' },
-  { id: 2, label: 'Midnight Professional', color: '#232a36' },
-  { id: 3, label: 'Executive Gray', color: '#4b4f56' },
-  { id: 4, label: 'Forest Professional', color: '#1db954' },
-  { id: 5, label: 'Royal Professional', color: '#7c3aed' },
-  { id: 6, label: 'Teal Professional', color: '#009688' },
-  { id: 7, label: 'Sunset Professional', color: '#ff7043' },
-  { id: 8, label: 'Indigo Professional', color: '#3f51b5' },
-  { id: 9, label: 'Crimson Professional', color: '#e53935' },
-  { id: 10, label: 'Rose Professional', color: '#e57373' },
+  { id: 2, label: 'Executive Gray', color: '#4b4f56' },
+  { id: 3, label: 'Forest Professional', color: '#1db954' },
+  { id: 4, label: 'Royal Professional', color: '#7c3aed' },
+  { id: 5, label: 'Teal Professional', color: '#009688' },
+  { id: 6, label: 'Sunset Professional', color: '#ff7043' },
 ];
 
 interface CreateEventDialogProps {
@@ -85,6 +81,7 @@ interface EventForm {
 
 export default function CreateEventDialog({ open, onClose, onEventCreated }: CreateEventDialogProps) {
   const [error, setError] = useState('');
+  const [eventUrlError, setEventUrlError] = useState('');
   const [closeRotated, setCloseRotated] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [notification, setNotification] = useState<NotificationState>({
@@ -107,6 +104,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
 
   const onSubmit = async (data: EventForm) => {
     setError('');
+    setEventUrlError('');
 
     try {
       // Combine the prefilled domain with user input for eventUrl
@@ -132,7 +130,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           longitude: 740, // Static value as in example
           googleMapLink: data.googleMapLink || '',
         },
-        marketingAbbreviation: data.eventUrl,
+        marketingAbbreviation: data.marketingAbbreviation,
         themeSelectionId: data.themeSelectionId,
         fontFamilyId: data.fontFamilyId,
         eventUrl: fullEventUrl, // Send the combined URL
@@ -164,8 +162,15 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         setError(result.message || 'Failed to create event');
       }
     } catch (err: any) {
-      const errorMessage = err?.data?.message || 'An error occurred. Please try again.';
-      setError(errorMessage);
+      const errorMessage = err?.data?.responseException || err?.data?.message || 'An error occurred. Please try again.';
+      
+      // Check if error is related to duplicate event URL/identity
+      if (errorMessage.toLowerCase().includes('already exists') || errorMessage.toLowerCase().includes('identity')) {
+        setEventUrlError(errorMessage);
+      } else {
+        setError(errorMessage);
+      }
+      
       // Show error notification
       setNotification({
         open: true,
@@ -178,6 +183,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   const handleClose = () => {
     reset();
     setError('');
+    setEventUrlError('');
     setLogoPreview('');
     onClose();
   };
@@ -427,7 +433,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           </Box>
 
           {/* Marketing Abbreviation */}
-          {/* <Box mb={3}>
+          <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
               Marketing Abbreviation
             </Typography>
@@ -438,7 +444,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
               helperText="Abrevation can be used for the event Login username. (e.g. 'XPO' for 'XPO Match')"
             />
-          </Box> */}
+          </Box>
 
           {/* Event URL */}
           <Box mb={3}>
@@ -450,6 +456,14 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               label="Event URL"
               {...register('eventUrl')}
               placeholder="your-event-name"
+              error={!!eventUrlError}
+              helperText={eventUrlError || "Enter the URL path after the domain"}
+              onChange={(e) => {
+                // Clear event URL error when user starts typing
+                if (eventUrlError) {
+                  setEventUrlError('');
+                }
+              }}
               InputProps={{
                 startAdornment: (
                   <Box 
@@ -466,12 +480,15 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   </Box>
                 ),
               }}
-              helperText="Enter the URL path after the domain"
               sx={{ 
                 bgcolor: 'rgba(0, 0, 0, 0.02)', 
                 borderRadius: 2,
                 '& .MuiInputBase-root': {
                   fontSize: '0.95rem'
+                },
+                '& .MuiFormHelperText-root.Mui-error': {
+                  color: '#d32f2f',
+                  fontWeight: 500
                 }
               }}
             />
