@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -64,6 +64,7 @@ interface EventForm {
   themeSelectionId: number;
   eventName: string;
   description: string;
+  numberOfDays: number;
   startDate: string;
   endDate: string;
   venueName: string;
@@ -91,16 +92,35 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   });
 
   const [createNewEvent, { isLoading }] = useCreateNewEventMutation();
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EventForm>({
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<EventForm>({
     defaultValues: {
       fontFamilyId: 1,
       themeSelectionId: 1,
       postalCode: 100001,
+      numberOfDays: 1,
     }
   });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Watch for changes in startDate and numberOfDays
+  const watchedStartDate = watch('startDate');
+  const watchedNumberOfDays = watch('numberOfDays');
+  const watchedLogoUrl = watch('logoUrl');
+
+  // Auto-calculate end date when start date or number of days changes
+  useEffect(() => {
+    if (watchedStartDate && watchedNumberOfDays) {
+      const startDate = new Date(watchedStartDate);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + (watchedNumberOfDays - 1)); // -1 because if it's 1 day, start and end should be same day
+      
+      // Format the date to match datetime-local input format
+      const formattedEndDate = endDate.toISOString().slice(0, 16);
+      setValue('endDate', formattedEndDate);
+    }
+  }, [watchedStartDate, watchedNumberOfDays, setValue]);
 
   const onSubmit = async (data: EventForm) => {
     setError('');
@@ -203,8 +223,6 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     }
     handleClose();
   };
-
-  const watchedLogoUrl = watch('logoUrl');
 
   return (
     <>
@@ -349,7 +367,23 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Number of Days"
+                  type="number"
+                  {...register('numberOfDays', { 
+                    required: 'Number of days is required',
+                    min: { value: 1, message: 'Event must be at least 1 day' },
+                    valueAsNumber: true
+                  })}
+                  error={!!errors.numberOfDays}
+                  helperText={errors.numberOfDays?.message || "How many days will the event run?"}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                  inputProps={{ min: 1 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
                   label="Start Date"
@@ -361,7 +395,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
                   label="End Date"
