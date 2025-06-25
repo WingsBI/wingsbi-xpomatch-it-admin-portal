@@ -28,24 +28,7 @@ import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
 import { useCreateNewEventMutation } from '@/lib/store/api/eventsApi';
-
-const FONT_OPTIONS = [
-  { id: 1, label: 'Nunito Sans', fontFamily: 'Nunito Sans, system-ui, sans-serif', className: 'font-nunito' },
-  { id: 2, label: 'Inter', fontFamily: 'Inter, system-ui, sans-serif', className: 'font-inter' },
-  { id: 3, label: 'Roboto', fontFamily: 'Roboto, system-ui, sans-serif', className: 'font-roboto' },
-  { id: 4, label: 'Poppins', fontFamily: 'Poppins, system-ui, sans-serif', className: 'font-poppins' },
-  { id: 5, label: 'Montserrat', fontFamily: 'Montserrat, system-ui, sans-serif', className: 'font-montserrat' },
-  { id: 6, label: 'Open Sans', fontFamily: 'Open Sans, system-ui, sans-serif', className: 'font-opensans' },
-  { id: 7, label: 'Lato', fontFamily: 'Lato, system-ui, sans-serif', className: 'font-lato' },
-];
-const THEME_OPTIONS = [
-  { id: 1, label: 'Ocean Blue', color: '#1976d2' },
-  { id: 2, label: 'Executive Gray', color: '#4b4f56' },
-  { id: 3, label: 'Forest Professional', color: '#1db954' },
-  { id: 4, label: 'Royal Professional', color: '#7c3aed' },
-  { id: 5, label: 'Teal Professional', color: '#009688' },
-  { id: 6, label: 'Sunset Professional', color: '#ff7043' },
-];
+import { useLazyGetAllThemeSelectionsQuery, useLazyGetAllFontsStylesQuery } from '@/lib/store/api/commonApi';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -92,10 +75,13 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   });
 
   const [createNewEvent, { isLoading }] = useCreateNewEventMutation();
-  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<EventForm>({
+  const [getThemes, { data: themesData, isLoading: themesLoading }] = useLazyGetAllThemeSelectionsQuery();
+  const [getFonts, { data: fontsData, isLoading: fontsLoading }] = useLazyGetAllFontsStylesQuery();
+  const { register, handleSubmit, formState: { errors, isValid }, reset, watch, setValue } = useForm<EventForm>({
+    mode: 'onChange', // Enable validation on change to update isValid in real-time
     defaultValues: {
-      fontFamilyId: 1,
-      themeSelectionId: 1,
+      fontFamilyId: fontsData?.result?.[0]?.id || 1,
+      themeSelectionId: themesData?.result?.[0]?.id || 1,
       postalCode: 100001,
       numberOfDays: 1,
     }
@@ -121,6 +107,27 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
       setValue('endDate', formattedEndDate);
     }
   }, [watchedStartDate, watchedNumberOfDays, setValue]);
+
+  // Trigger API calls when dialog opens
+  useEffect(() => {
+    if (open) {
+      getThemes();
+      getFonts();
+    }
+  }, [open, getThemes, getFonts]);
+
+  // Update form defaults when API data loads
+  useEffect(() => {
+    if (fontsData?.result?.[0] && !watch('fontFamilyId')) {
+      setValue('fontFamilyId', fontsData.result[0].id);
+    }
+  }, [fontsData, setValue, watch]);
+
+  useEffect(() => {
+    if (themesData?.result?.[0] && !watch('themeSelectionId')) {
+      setValue('themeSelectionId', themesData.result[0].id);
+    }
+  }, [themesData, setValue, watch]);
 
   const onSubmit = async (data: EventForm) => {
     setError('');
@@ -341,6 +348,12 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Alert>
           )}
 
+          {(themesLoading || fontsLoading) && (
+            <Alert severity="info" sx={{ mb: 3, background: 'rgba(2, 136, 209, 0.1)', color: '#1976d2', border: '1px solid rgba(2, 136, 209, 0.3)', fontWeight: 600, '& .MuiAlert-icon': { color: '#1976d2' } }}>
+              Loading themes and fonts...
+            </Alert>
+          )}
+
           {/* Event Details Section */}
           <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
@@ -350,7 +363,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Event Name"
+                  label="Event Name *"
                   {...register('eventName', { required: 'Event name is required' })}
                   error={!!errors.eventName}
                   helperText={errors.eventName?.message}
@@ -370,7 +383,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Number of Days"
+                  label="Number of Days *"
                   type="number"
                   {...register('numberOfDays', { 
                     required: 'Number of days is required',
@@ -386,7 +399,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Start Date"
+                  label="Start Date *"
                   type="datetime-local"
                   InputLabelProps={{ shrink: true }}
                   {...register('startDate', { required: 'Start date is required' })}
@@ -398,7 +411,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="End Date"
+                  label="End Date *"
                   type="datetime-local"
                   InputLabelProps={{ shrink: true }}
                   {...register('endDate', { required: 'End date is required' })}
@@ -419,7 +432,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Venue Name"
+                  label="Venue Name *"
                   {...register('venueName', { required: 'Venue name is required' })}
                   error={!!errors.venueName}
                   helperText={errors.venueName?.message}
@@ -429,7 +442,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Address Line 1"
+                  label="Address Line 1 *"
                   {...register('addressLine1', { required: 'Address line 1 is required' })}
                   error={!!errors.addressLine1}
                   helperText={errors.addressLine1?.message}
@@ -447,7 +460,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Postal Code"
+                  label="Postal Code *"
                   type="number"
                   {...register('postalCode', { required: 'Postal code is required' })}
                   error={!!errors.postalCode}
@@ -473,10 +486,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Typography>
             <TextField
               fullWidth
-              label="Marketing Abbreviation"
-              {...register('marketingAbbreviation')}
+              label="Marketing Abbreviation *"
+              {...register('marketingAbbreviation', { required: 'Marketing abbreviation is required' })}
+              error={!!errors.marketingAbbreviation}
+              helperText={errors.marketingAbbreviation?.message || "Abrevation can be used for the event Login username. (e.g. 'XPO' for 'XPO Match')"}
               sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
-              helperText="Abrevation can be used for the event Login username. (e.g. 'XPO' for 'XPO Match')"
             />
           </Box>
 
@@ -487,11 +501,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Typography>
             <TextField
               fullWidth
-              label="Event URL"
-              {...register('eventUrl')}
+              label="Event URL *"
+              {...register('eventUrl', { required: 'Event URL is required' })}
               placeholder="your-event-name"
-              error={!!eventUrlError}
-              helperText={eventUrlError || "Enter the URL path after the domain"}
+              error={!!eventUrlError || !!errors.eventUrl}
+              helperText={eventUrlError || errors.eventUrl?.message || "Enter the URL path after the domain"}
               onChange={(e) => {
                 // Clear event URL error when user starts typing
                 if (eventUrlError) {
@@ -572,8 +586,8 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 <TextField
                   select
                   fullWidth
-                  label="Font Family"
-                  defaultValue={1}
+                  label="Font Family *"
+                  defaultValue={fontsData?.result?.[0]?.id || 1}
                   {...register('fontFamilyId', { required: 'Font is required', valueAsNumber: true })}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
                   SelectProps={{
@@ -585,8 +599,9 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                       },
                     },
                   }}
+                  disabled={fontsLoading}
                 >
-                  {FONT_OPTIONS.map(font => (
+                  {fontsData?.result?.filter(font => font.isActive).map(font => (
                     <MenuItem 
                       key={font.id} 
                       value={font.id}
@@ -617,12 +632,13 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 <TextField
                   select
                   fullWidth
-                  label="Theme Selection"
-                  defaultValue={1}
+                  label="Theme Selection *"
+                  defaultValue={themesData?.result?.[0]?.id || 1}
                   {...register('themeSelectionId', { required: 'Theme is required', valueAsNumber: true })}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                  disabled={themesLoading}
                 >
-                  {THEME_OPTIONS.map(theme => (
+                  {themesData?.result?.filter(theme => theme.isActive).map(theme => (
                     <MenuItem key={theme.id} value={theme.id}>
                       <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', bgcolor: theme.color, mr: 1, border: `1px solid ${theme.color}` }} />
                       {theme.label}
@@ -642,7 +658,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="First Name"
+                  label="First Name *"
                   {...register('eventAdminFirstName', { required: 'First name is required' })}
                   error={!!errors.eventAdminFirstName}
                   helperText={errors.eventAdminFirstName?.message}
@@ -667,7 +683,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Last Name"
+                  label="Last Name *"
                   {...register('eventAdminLastName', { required: 'Last name is required' })}
                   error={!!errors.eventAdminLastName}
                   helperText={errors.eventAdminLastName?.message}
@@ -692,7 +708,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Email"
+                  label="Email *"
                   type="email"
                   {...register('eventAdminEmail', { 
                     required: 'Email is required',
@@ -749,7 +765,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           <Button
             type="submit"
             variant="contained"
-            disabled={isLoading}
+            disabled={isLoading || themesLoading || fontsLoading || !isValid}
             sx={{
               minWidth: 120,
               borderRadius: 2,
@@ -772,7 +788,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               transition: 'all 0.3s ease',
             }}
           >
-            {isLoading ? 'Creating...' : 'Create Event'}
+            {isLoading ? 'Creating...' : (themesLoading || fontsLoading) ? 'Loading...' : !isValid ? 'Fill Required Fields' : 'Create Event'}
           </Button>
         </DialogActions>
         </DialogContent>
