@@ -335,8 +335,8 @@ export default function ITAdminDashboard() {
                   sx={{
                     bgcolor: 'rgba(255, 255, 255, 0.2)',
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    color: 'white',
+                    border: '1px solid rgba(8, 8, 8, 0.3)',
+                    color: 'rgba(44, 41, 41, 0.8)',
                     fontWeight: 600,
                     px: 2.5,
                     py: 1,

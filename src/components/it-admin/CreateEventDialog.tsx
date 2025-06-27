@@ -348,11 +348,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Alert>
           )}
 
-          {(themesLoading || fontsLoading) && (
+          {/* {(themesLoading || fontsLoading) && (
             <Alert severity="info" sx={{ mb: 3, background: 'rgba(2, 136, 209, 0.1)', color: '#1976d2', border: '1px solid rgba(2, 136, 209, 0.3)', fontWeight: 600, '& .MuiAlert-icon': { color: '#1976d2' } }}>
               Loading themes and fonts...
             </Alert>
-          )}
+          )} */}
 
           {/* Event Details Section */}
           <Box mb={3}>
