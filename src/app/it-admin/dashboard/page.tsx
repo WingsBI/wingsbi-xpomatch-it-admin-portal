@@ -536,8 +536,7 @@ export default function ITAdminDashboard() {
                             <TableRow sx={{ bgcolor: '#f0f0f0' }}>
                               <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Marketing Abbreviative</TableCell>
                               <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Logo</TableCell>
-                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Font Family</TableCell>
-                              <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Theme</TableCell>
+                              
                               <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Event Admin</TableCell>
                               <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Email</TableCell>
                             </TableRow>
@@ -572,19 +571,7 @@ export default function ITAdminDashboard() {
                                   <EventIcon />
                                 </Avatar>
                               </TableCell>
-                              <TableCell>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                  {event.fontFamily || 'Default'}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={event.theme || 'Default'}
-                                  variant="outlined"
-                                  size="small"
-                                  sx={{ fontWeight: 500 }}
-                                />
-                              </TableCell>
+                              
                               <TableCell>
                                 {event.eventAdminFirstName && event.eventAdminLastName ? (
                                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
