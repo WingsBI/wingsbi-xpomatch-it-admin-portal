@@ -24,6 +24,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { useCreateCustomerMutation } from '@/lib/store/api/adminApi';
 
 interface CreateCustomerDialogProps {
   open: boolean;
@@ -54,7 +55,6 @@ interface CustomerForm {
 export default function CreateCustomerDialog({ open, onClose, onCustomerCreated }: CreateCustomerDialogProps) {
   const [error, setError] = useState('');
   const [closeRotated, setCloseRotated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<NotificationState>({
     open: false,
     message: '',
@@ -63,34 +63,59 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
 
   const { register, handleSubmit, formState: { errors, isValid }, reset } = useForm<CustomerForm>({
     mode: 'onChange',
-    
   });
+
+  const [createCustomer, { isLoading }] = useCreateCustomerMutation();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const onSubmit = async (data: CustomerForm) => {
     setError('');
-    setIsLoading(true);
 
     try {
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Transform form data to match API format
+      const customerData = {
+        companyName: data.companyName,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || '',
+        city: data.city,
+        stateProvience: data.state, // Note: API has typo - should be stateProvince
+        postalCode: data.postalCode || '',
+        country: data.country,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        emailAddress: data.email,
+        phoneNumber: data.phone || '',
+      };
+
+      console.log('Customer data to be submitted:', customerData);
       
-      // Here you would typically make an API call to create the customer
-      console.log('Customer data to be submitted:', data);
+      const response = await createCustomer(customerData).unwrap();
       
       // Show success message
       setNotification({
         open: true,
-        message: 'Customer created successfully!',
+        message: response.message || 'Customer created successfully!',
         severity: 'success'
       });
       
       onCustomerCreated();
       handleClose();
     } catch (err: any) {
-      const errorMessage = err?.message || 'An error occurred. Please try again.';
+      console.error('Error creating customer:', err);
+      
+      // Handle API error response
+      let errorMessage = 'An error occurred. Please try again.';
+      
+      if (err?.data?.message) {
+        errorMessage = err.data.message;
+      } else if (err?.data?.responseException) {
+        errorMessage = err.data.responseException;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
       
       // Show error notification
@@ -99,8 +124,6 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
         message: errorMessage,
         severity: 'error'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
