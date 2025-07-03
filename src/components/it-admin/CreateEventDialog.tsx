@@ -82,7 +82,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     defaultValues: {
       fontFamilyId: fontsData?.result?.[0]?.id || 1,
       themeSelectionId: themesData?.result?.[0]?.id || 1,
-      postalCode: 100001,
+      
       numberOfDays: 1,
     }
   });
@@ -460,9 +460,9 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Postal Code *"
+                  label="Postal Code "
                   type="number"
-                  {...register('postalCode', { required: 'Postal code is required' })}
+                  {...register('postalCode')}
                   error={!!errors.postalCode}
                   helperText={errors.postalCode?.message}
                   sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}

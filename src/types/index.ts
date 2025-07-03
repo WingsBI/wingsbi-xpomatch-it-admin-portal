@@ -8,6 +8,33 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  companyName?: string;
+  position?: string;
+  customerType: 'individual' | 'business' | 'enterprise' | 'partner';
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CustomerWithEvents {
+  customer: Customer;
+  events: Event[];
+  totalEvents: number;
+  activeEvents: number;
+}
+
 export interface Event {
   id: string;
   eventId: string;
@@ -20,6 +47,11 @@ export interface Event {
   maxExhibitors?: number;
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   createdBy: string; // IT Admin ID
+  customerId?: string; // Customer who owns this event
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
+  customerCompany?: string;
   eventAdminId?: string;
   eventAdminFirstName?: string;
   eventAdminLastName?: string;
