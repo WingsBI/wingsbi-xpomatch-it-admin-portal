@@ -29,6 +29,61 @@ export interface UpdateAdminRequest extends Partial<Omit<CreateAdminRequest, 'pa
   isActive?: boolean;
 }
 
+// Customer types
+export interface CustomerEvent {
+  id: number;
+  customerId: number;
+  title: string;
+  description: string;
+  paymentDetailsId: number;
+  eventCategoryId: number;
+  eventModeId: number;
+  eventStatusId: number;
+  startDateTime: string;
+  enddatetime: string;
+  isActive: boolean;
+  createdBy: number;
+  createdDate: string;
+  modifiedBy: number;
+  modifiedDate: string;
+  payment: boolean;
+}
+
+export interface Customer {
+  id: number;
+  companyName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  stateProvince: string;
+  postalCode: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  phoneNumber: string;
+  createdBy: number;
+  createdDate: string;
+  modifiedBy: number | null;
+  modifiedDate: string | null;
+  isActive: boolean;
+  events: CustomerEvent[];
+}
+
+export interface CreateCustomerRequest {
+  companyName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  stateProvience: string; // Note: API uses 'stateProvience' (typo in API)
+  postalCode?: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  phoneNumber?: string;
+}
+
 export interface AdminUsersResponse {
   version: string;
   statusCode: number;
@@ -45,6 +100,24 @@ export interface AdminUserResponse {
   isError: boolean;
   responseException: null | string;
   result: AdminUser;
+}
+
+export interface CustomerResponse {
+  version: string;
+  statusCode: number;
+  message: string;
+  isError: boolean;
+  responseException: null | string;
+  result: Customer;
+}
+
+export interface CustomersListResponse {
+  version: string;
+  statusCode: number;
+  message: string;
+  isError: boolean;
+  responseException: null | string;
+  result: Customer[];
 }
 
 export interface Role {
@@ -137,6 +210,22 @@ export const adminApi = baseApi.injectEndpoints({
         body: { newPassword },
       }),
     }),
+
+    // POST - Create new customer
+    createCustomer: builder.mutation<CustomerResponse, CreateCustomerRequest>({
+      query: (customerData) => ({
+        url: '/api/Customer/createCustomer',
+        method: 'POST',
+        body: customerData,
+      }),
+      invalidatesTags: ['Admin'], // You might want to add a 'Customer' tag type later
+    }),
+
+    // GET - Get all customers
+    getAllCustomers: builder.query<CustomersListResponse, void>({
+      query: () => '/api/Customer/getAllCustomer',
+      providesTags: ['Admin'],
+    }),
   }),
 });
 
@@ -150,4 +239,6 @@ export const {
   useGetRolesQuery,
   useGetDashboardStatsQuery,
   useResetAdminPasswordMutation,
+  useCreateCustomerMutation,
+  useGetAllCustomersQuery,
 } = adminApi; 

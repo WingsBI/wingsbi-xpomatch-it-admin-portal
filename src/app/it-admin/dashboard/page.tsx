@@ -57,6 +57,7 @@ import EditEventDialog from '@/components/it-admin/EditEventDialog';
 import CreateCustomerDialog from '@/components/it-admin/CreateCustomerDialog';
 import { mockEvent, mockStats } from '@/lib/mockData';
 import { useGetAllEventsQuery, EventFromAPI } from '@/lib/store/api/eventsApi';
+import { useGetAllCustomersQuery, Customer as APICustomer, CustomerEvent } from '@/lib/store/api/adminApi';
 
 export default function ITAdminDashboard() {
   const router = useRouter();
@@ -77,57 +78,16 @@ export default function ITAdminDashboard() {
   // Fetch events using the real API
   const { data: eventsResponse, isLoading, error, refetch } = useGetAllEventsQuery();
 
-  // Mock customers data for demonstration
-  const mockCustomers: Customer[] = [
-    {
-      id: '1',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@techcorp.com',
-      phone: '+1-555-0123',
-      companyName: 'TechCorp Solutions',
-      position: 'CEO',
-      customerType: 'business',
-      city: 'New York',
-      state: 'New York',
-      country: 'United States',
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-15'),
-    },
-    {
-      id: '2',
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      email: 'sarah.j@innovatetech.com',
-      phone: '+1-555-0124',
-      companyName: 'InnovateTech',
-      position: 'CTO',
-      customerType: 'enterprise',
-      city: 'San Francisco',
-      state: 'California',
-      country: 'United States',
-      createdAt: new Date('2024-02-01'),
-      updatedAt: new Date('2024-02-01'),
-    },
-    {
-      id: '3',
-      firstName: 'Michael',
-      lastName: 'Chen',
-      email: 'michael.chen@startup.com',
-      phone: '+1-555-0125',
-      companyName: 'StartupHub',
-      position: 'Founder',
-      customerType: 'business',
-      city: 'Austin',
-      state: 'Texas',
-      country: 'United States',
-      createdAt: new Date('2024-02-15'),
-      updatedAt: new Date('2024-02-15'),
-    },
-  ];
+  // Fetch customers using the real API
+  const { 
+    data: customersResponse, 
+    isLoading: isCustomersLoading, 
+    error: customersError, 
+    refetch: refetchCustomers 
+  } = useGetAllCustomersQuery();
 
   // Function to map API response to Event interface
-  const mapApiEventToEvent = (apiEvent: EventFromAPI): Event => {
+  const mapApiEventToEvent = (apiEvent: EventFromAPI, customers: APICustomer[]): Event => {
     // Map eventStatusId to readable status
     const getStatusFromId = (statusId: number): 'draft' | 'active' | 'completed' | 'cancelled' => {
       switch (statusId) {
@@ -139,8 +99,10 @@ export default function ITAdminDashboard() {
       }
     };
 
-    // Randomly assign customers to events for demonstration
-    const randomCustomer = mockCustomers[Math.floor(Math.random() * mockCustomers.length)];
+    // Find the customer associated with this event from the customers API
+    const associatedCustomer = customers.find(customer => 
+      customer.events.some(event => event.id === apiEvent.id)
+    );
 
     return {
       id: apiEvent.id.toString(),
@@ -152,11 +114,11 @@ export default function ITAdminDashboard() {
       location: 'N/A', // Not provided in API response
       status: getStatusFromId(apiEvent.eventStatusId),
       createdBy: apiEvent.createdBy.toString(),
-      customerId: randomCustomer.id,
-      customerFirstName: randomCustomer.firstName,
-      customerLastName: randomCustomer.lastName,
-      customerEmail: randomCustomer.email,
-      customerCompany: randomCustomer.companyName,
+      customerId: associatedCustomer?.id.toString() || '',
+      customerFirstName: associatedCustomer?.firstName || '',
+      customerLastName: associatedCustomer?.lastName || '',
+      customerEmail: associatedCustomer?.emailAddress || '',
+      customerCompany: associatedCustomer?.companyName || '',
       eventAdminId: apiEvent.eventAdministratorId.toString(),
       eventAdminFirstName: apiEvent.firstName,
       eventAdminLastName: apiEvent.lastName,
@@ -171,56 +133,99 @@ export default function ITAdminDashboard() {
     };
   };
 
-  // Function to group events by customers
-  const groupEventsByCustomers = (events: Event[]): CustomerWithEvents[] => {
-    const customerMap = new Map<string, CustomerWithEvents>();
-
-    events.forEach(event => {
-      if (event.customerId) {
-        const customerId = event.customerId;
-        
-        if (!customerMap.has(customerId)) {
-          const customer = mockCustomers.find(c => c.id === customerId);
-          if (customer) {
-            customerMap.set(customerId, {
-              customer,
-              events: [],
-              totalEvents: 0,
-              activeEvents: 0,
-            });
+  // Function to group events by customers using real API data
+  const groupEventsByCustomers = (customers: APICustomer[]): CustomerWithEvents[] => {
+    return customers.map(customer => {
+      // Map customer events to Event interface for display
+      const mappedEvents = customer.events.map(event => {
+        // Map eventStatusId to readable status
+        const getStatusFromId = (statusId: number): 'draft' | 'active' | 'completed' | 'cancelled' => {
+          switch (statusId) {
+            case 1: return 'active';
+            case 2: return 'draft';
+            case 3: return 'completed';
+            case 4: return 'cancelled';
+            default: return 'draft';
           }
-        }
+        };
 
-        const customerWithEvents = customerMap.get(customerId);
-        if (customerWithEvents) {
-          customerWithEvents.events.push(event);
-          customerWithEvents.totalEvents += 1;
-          if (event.status === 'active') {
-            customerWithEvents.activeEvents += 1;
-          }
-        }
-      }
+        return {
+          id: event.id.toString(),
+          eventId: event.id.toString(),
+          name: event.title,
+          description: event.description,
+          startDate: new Date(event.startDateTime),
+          endDate: new Date(event.enddatetime),
+          location: 'N/A',
+          status: getStatusFromId(event.eventStatusId),
+          createdBy: event.createdBy.toString(),
+          customerId: customer.id.toString(),
+          customerFirstName: customer.firstName,
+          customerLastName: customer.lastName,
+          customerEmail: customer.emailAddress,
+          customerCompany: customer.companyName,
+          eventAdminId: '', // Not available in customer events
+          eventAdminFirstName: '',
+          eventAdminLastName: '',
+          eventAdminEmail: '',
+          customAttributes: [],
+          marketingAbbreviation: '',
+          eventLogo: undefined,
+          fontFamily: undefined,
+          theme: undefined,
+          createdAt: new Date(event.createdDate),
+          updatedAt: new Date(event.modifiedDate || event.createdDate),
+        } as Event;
+      });
+
+      // Convert API customer to our Customer interface
+      const mappedCustomer: Customer = {
+        id: customer.id.toString(),
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.emailAddress,
+        phone: customer.phoneNumber || '',
+        companyName: customer.companyName,
+        position: '', // Not available in API
+        customerType: 'business', // Default value since not in API
+        city: customer.city,
+        state: customer.stateProvince,
+        country: customer.country,
+        createdAt: new Date(customer.createdDate),
+        updatedAt: new Date(customer.modifiedDate || customer.createdDate),
+      };
+
+      return {
+        customer: mappedCustomer,
+        events: mappedEvents,
+        totalEvents: customer.events.length,
+        activeEvents: customer.events.filter(event => event.eventStatusId === 1).length,
+      };
     });
-
-    return Array.from(customerMap.values());
   };
 
   useEffect(() => {
-    if (eventsResponse?.result) {
-      const mappedEvents = eventsResponse.result.map(mapApiEventToEvent);
-      setEvents(mappedEvents);
-      
-      // Group events by customers
-      const groupedCustomers = groupEventsByCustomers(mappedEvents);
+    // Wait for both APIs to load
+    if (customersResponse?.result) {
+      // Group customers with their events
+      const groupedCustomers = groupEventsByCustomers(customersResponse.result);
       setCustomersWithEvents(groupedCustomers);
     }
+
+    // Also update events from the events API if needed
+    if (eventsResponse?.result && customersResponse?.result) {
+      const mappedEvents = eventsResponse.result.map(event => mapApiEventToEvent(event, customersResponse.result || []));
+      setEvents(mappedEvents);
+    }
+    
     // Set mock stats for now since we don't have a stats API
     setStats(mockStats);
-  }, [eventsResponse]);
+  }, [eventsResponse, customersResponse]);
 
   const fetchDashboardData = async () => {
-    // Refetch the events data
+    // Refetch both events and customers data
     refetch();
+    refetchCustomers();
   };
 
   const handleCreateEvent = () => {
@@ -249,7 +254,8 @@ export default function ITAdminDashboard() {
 
   const handleCustomerCreated = () => {
     setCreateCustomerOpen(false);
-    // You can add any refresh logic here if needed
+    // Refresh customer data after creating a new customer
+    refetchCustomers();
   };
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -840,7 +846,7 @@ export default function ITAdminDashboard() {
                                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                                     {/* {customerWithEvents.customer.firstName} {customerWithEvents.customer.lastName} */}
                                   </Typography>
-                                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                                     {customerWithEvents.customer.companyName} • 
                                   </Typography>
                                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -971,52 +977,77 @@ export default function ITAdminDashboard() {
                         </>
                       ))
                     )}
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                  <CircularProgress size={40} />
-                  <Typography variant="body1" sx={{ mt: 2 }}>
-                    Loading events...
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {error && (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                  <Box>
-                    <Typography variant="h6" color="error" sx={{ mb: 1 }}>
-                      Error loading events
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Please try refreshing the page or contact support
-                    </Typography>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      onClick={() => refetch()}
-                    >
-                      Retry
-                    </Button>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            )}
-            {!isLoading && !error && events.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                  <Box>
-                    <EventIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                      No events created yet
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Create your first event to get started with the platform
-                    </Typography>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            )}
+                    {(isLoading || isCustomersLoading) && (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                          <CircularProgress size={40} />
+                          <Typography variant="body1" sx={{ mt: 2 }}>
+                            {viewMode === 'events' ? 'Loading events...' : 'Loading customers...'}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {(error || customersError) && (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                          <Box>
+                            <Typography variant="h6" color="error" sx={{ mb: 1 }}>
+                              {viewMode === 'events' ? 'Error loading events' : 'Error loading customers'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                              Please try refreshing the page or contact support
+                            </Typography>
+                            <Button 
+                              variant="outlined" 
+                              color="primary" 
+                              onClick={() => {
+                                if (viewMode === 'events') {
+                                  refetch();
+                                } else {
+                                  refetchCustomers();
+                                }
+                              }}
+                            >
+                              Retry
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!isLoading && !isCustomersLoading && !error && !customersError && (
+                      <>
+                        {viewMode === 'events' && events.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                              <Box>
+                                <EventIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                                  No events created yet
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  Create your first event to get started with the platform
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {viewMode === 'customers' && customersWithEvents.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                              <Box>
+                                <Person sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                                  No customers found
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  Add your first customer to start creating events
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>

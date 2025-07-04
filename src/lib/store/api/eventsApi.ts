@@ -63,6 +63,7 @@ export interface CreateEventRequest {
 
 // New create event types based on API specification
 export interface CreateNewEventRequest {
+  customerId: number;
   eventDetails: {
     eventName: string;
     description: string;
@@ -76,7 +77,7 @@ export interface CreateNewEventRequest {
     countryId: number;
     stateId: number;
     cityId: number;
-    postalCode: number;
+    postalCode: string;
     latitude: number;
     longitude: number;
     googleMapLink: string;

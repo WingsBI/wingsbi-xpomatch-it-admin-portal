@@ -21,14 +21,16 @@ import {
   Backdrop,
   CircularProgress,
   Snackbar,
+  Autocomplete,
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
 import { useCreateNewEventMutation } from '@/lib/store/api/eventsApi';
 import { useLazyGetAllThemeSelectionsQuery, useLazyGetAllFontsStylesQuery } from '@/lib/store/api/commonApi';
+import { useGetAllCustomersQuery } from '@/lib/store/api/adminApi';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -43,6 +45,7 @@ interface NotificationState {
 }
 
 interface EventForm {
+  customerId: number;
   fontFamilyId: number;
   themeSelectionId: number;
   eventName: string;
@@ -53,7 +56,7 @@ interface EventForm {
   venueName: string;
   addressLine1: string;
   addressLine2: string;
-  postalCode: number;
+  postalCode: string;
   googleMapLink: string;
   marketingAbbreviation: string;
   eventUrl: string;
@@ -77,12 +80,12 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   const [createNewEvent, { isLoading }] = useCreateNewEventMutation();
   const [getThemes, { data: themesData, isLoading: themesLoading }] = useLazyGetAllThemeSelectionsQuery();
   const [getFonts, { data: fontsData, isLoading: fontsLoading }] = useLazyGetAllFontsStylesQuery();
-  const { register, handleSubmit, formState: { errors, isValid }, reset, watch, setValue } = useForm<EventForm>({
+  const { data: customersData, isLoading: customersLoading } = useGetAllCustomersQuery();
+  const { register, handleSubmit, formState: { errors, isValid }, reset, watch, setValue, control } = useForm<EventForm>({
     mode: 'onChange', // Enable validation on change to update isValid in real-time
     defaultValues: {
       fontFamilyId: fontsData?.result?.[0]?.id || 1,
       themeSelectionId: themesData?.result?.[0]?.id || 1,
-      
       numberOfDays: 1,
     }
   });
@@ -139,6 +142,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
       
       // Map form data to API payload structure
       const payload = {
+        customerId: data.customerId,
         eventDetails: {
           eventName: data.eventName,
           description: data.description,
@@ -149,12 +153,12 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           venueName: data.venueName,
           addressLine1: data.addressLine1,
           addressLine2: data.addressLine2 || '',
-          countryId: 2, // Static ID as requested
-          stateId: 2,   // Static ID as requested  
-          cityId: 1,    // Static ID as requested
-          postalCode: data.postalCode,
-          latitude: 40,  // Static value as in example
-          longitude: 740, // Static value as in example
+          countryId: 1, // Static ID as per API specification
+          stateId: 1,   // Static ID as per API specification
+          cityId: 1,    // Static ID as per API specification
+          postalCode: data.postalCode || '',
+          latitude: 17,  // Static value as per API specification
+          longitude: 78, // Static value as per API specification
           googleMapLink: data.googleMapLink || '',
         },
         marketingAbbreviation: data.marketingAbbreviation,
@@ -162,11 +166,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
         fontFamilyId: data.fontFamilyId,
         eventUrl: fullEventUrl, // Send the combined URL
         logoUrl: data.logoUrl || '',
-        payment: true, // Static value as in example
-        eventCatalogId: 1, // Static value as in example
-        eventStatusId: 1,  // Static value as in example
-        paymentDetailsId: 1, // Static value as in example
-        eventModeId: 1,    // Static value as in example
+        payment: true, // Static value as per API specification
+        eventCatalogId: 1, // Static value as per API specification
+        eventStatusId: 1,  // Static value as per API specification
+        paymentDetailsId: 1, // Static value as per API specification
+        eventModeId: 1,    // Static value as per API specification
         eventAdministrator: {
           firstName: data.eventAdminFirstName,
           lastName: data.eventAdminLastName,
@@ -423,6 +427,96 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             </Grid>
           </Box>
 
+          {/* Customer Selection Section */}
+          <Box mb={3}>
+            <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
+              Customer Selection
+            </Typography>
+            <Controller
+              name="customerId"
+              control={control}
+              rules={{ required: 'Customer selection is required' }}
+              render={({ field, fieldState: { error } }) => (
+                <Autocomplete
+                  {...field}
+                  options={customersData?.result || []}
+                  getOptionLabel={(option) => {
+                    if (typeof option === 'number') {
+                      const customer = customersData?.result?.find(c => c.id === option);
+                      return customer ? `${customer.companyName} - ${customer.firstName} ${customer.lastName}` : '';
+                    }
+                    return `${option.companyName} • `;
+                  }}
+                  isOptionEqualToValue={(option, value) => {
+                    if (typeof value === 'number') {
+                      return option.id === value;
+                    }
+                    return option.id === value?.id;
+                  }}
+                  loading={customersLoading}
+                  onChange={(_, newValue) => {
+                    field.onChange(newValue?.id || null);
+                  }}
+                  value={customersData?.result?.find(c => c.id === field.value) || null}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Customer *"
+                      error={!!error}
+                      helperText={error?.message || "Search and select a customer for this event"}
+                      sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {customersLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props} key={option.id}>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                          {option.companyName}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#666', fontSize: '0.875rem' }}>
+                          {option.firstName} {option.lastName} • {option.emailAddress}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#999', fontSize: '0.75rem' }}>
+                          {option.city}, {option.stateProvince} • {option.country}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+                  filterOptions={(options, { inputValue }) => {
+                    return options.filter(option =>
+                      option.companyName.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option.firstName.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option.lastName.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option.emailAddress.toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option.city.toLowerCase().includes(inputValue.toLowerCase())
+                    );
+                  }}
+                  noOptionsText={customersLoading ? "Loading customers..." : "No customers found"}
+                  sx={{
+                    '& .MuiAutocomplete-listbox': {
+                      '& .MuiAutocomplete-option': {
+                        padding: '12px 16px',
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+                        '&:last-child': {
+                          borderBottom: 'none'
+                        }
+                      }
+                    }
+                  }}
+                />
+              )}
+            />
+          </Box>
+
           {/* Location Section */}
           <Box mb={3}>
             <Typography variant="h6" gutterBottom sx={{ color: '#1a1a1a', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.15rem' }, letterSpacing: 0.2 }}>
@@ -460,8 +554,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Postal Code "
-                  type="number"
+                  label="Postal Code *"
                   {...register('postalCode')}
                   error={!!errors.postalCode}
                   helperText={errors.postalCode?.message}
@@ -765,7 +858,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           <Button
             type="submit"
             variant="contained"
-            disabled={isLoading || themesLoading || fontsLoading || !isValid}
+            disabled={isLoading || themesLoading || fontsLoading || customersLoading || !isValid}
             sx={{
               minWidth: 120,
               borderRadius: 2,
@@ -788,7 +881,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               transition: 'all 0.3s ease',
             }}
           >
-            {isLoading ? 'Creating...' : (themesLoading || fontsLoading) ? 'Loading...' : !isValid ? 'Fill Required Fields' : 'Create Event'}
+            {isLoading ? 'Creating...' : (themesLoading || fontsLoading || customersLoading) ? 'Loading...' : !isValid ? 'Fill Required Fields' : 'Create Event'}
           </Button>
         </DialogActions>
         </DialogContent>
