@@ -61,7 +61,7 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
     severity: 'success'
   });
 
-  const { register, handleSubmit, formState: { errors, isValid }, reset } = useForm<CustomerForm>({
+  const { register, handleSubmit, formState: { errors, isValid }, reset, trigger, setFocus } = useForm<CustomerForm>({
     mode: 'onChange',
   });
 
@@ -72,6 +72,18 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
 
   const onSubmit = async (data: CustomerForm) => {
     setError('');
+
+    // Manually trigger validation
+    const isFormValid = await trigger();
+    
+    if (!isFormValid) {
+      // Find the first field with an error and focus on it
+      const firstErrorField = Object.keys(errors)[0] as keyof CustomerForm;
+      if (firstErrorField) {
+        setFocus(firstErrorField);
+      }
+      return;
+    }
 
     try {
       // Transform form data to match API format
@@ -413,7 +425,7 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
             <Button
               type="submit"
               variant="contained"
-              disabled={!isValid || isLoading}
+              disabled={isLoading}
               startIcon={isLoading ? undefined : <PersonAddIcon />}
               sx={{
                 background: 'linear-gradient(135deg,rgb(84, 112, 236) 0%,rgb(130, 178, 218) 100%)',
@@ -422,7 +434,6 @@ export default function CreateCustomerDialog({ open, onClose, onCustomerCreated 
                 fontWeight: 600,
                 px: 4,
                 py: 1.5,
-               
                 '&:hover': {
                   background: 'linear-gradient(135deg,rgb(26, 65, 240) 0%,rgb(79, 101, 221) 100%)',
                 boxShadow: '0 4px 15px rgba(63, 44, 231, 0.65)',

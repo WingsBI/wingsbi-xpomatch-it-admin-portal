@@ -847,7 +847,7 @@ export default function ITAdminDashboard() {
                                     {/* {customerWithEvents.customer.firstName} {customerWithEvents.customer.lastName} */}
                                   </Typography>
                                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                                    {customerWithEvents.customer.companyName} • 
+                                    {customerWithEvents.customer.companyName} 
                                   </Typography>
                                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                     {customerWithEvents.customer.email}
