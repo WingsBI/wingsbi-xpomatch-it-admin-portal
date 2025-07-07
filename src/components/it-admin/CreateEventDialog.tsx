@@ -56,7 +56,10 @@ interface EventForm {
   venueName: string;
   addressLine1: string;
   addressLine2: string;
-  postalCode: string;
+  postalCode?: string;
+  country: string;
+  state: string;
+  city: string;
   googleMapLink: string;
   marketingAbbreviation: string;
   eventUrl: string;
@@ -81,7 +84,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
   const [getThemes, { data: themesData, isLoading: themesLoading }] = useLazyGetAllThemeSelectionsQuery();
   const [getFonts, { data: fontsData, isLoading: fontsLoading }] = useLazyGetAllFontsStylesQuery();
   const { data: customersData, isLoading: customersLoading } = useGetAllCustomersQuery();
-  const { register, handleSubmit, formState: { errors, isValid }, reset, watch, setValue, control } = useForm<EventForm>({
+  const { register, handleSubmit, formState: { errors, isValid }, reset, watch, setValue, control, trigger, setFocus } = useForm<EventForm>({
     mode: 'onChange', // Enable validation on change to update isValid in real-time
     defaultValues: {
       fontFamilyId: fontsData?.result?.[0]?.id || 1,
@@ -136,6 +139,18 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
     setError('');
     setEventUrlError('');
 
+    // Manually trigger validation
+    const isFormValid = await trigger();
+    
+    if (!isFormValid) {
+      // Find the first field with an error and focus on it
+      const firstErrorField = Object.keys(errors)[0] as keyof EventForm;
+      if (firstErrorField) {
+        setFocus(firstErrorField);
+      }
+      return;
+    }
+
     try {
       // Combine the prefilled domain with user input for eventUrl
       const fullEventUrl = `https://xpomatch-dev-event-admin-portal.azurewebsites.net/${data.eventUrl}`;
@@ -153,12 +168,12 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           venueName: data.venueName,
           addressLine1: data.addressLine1,
           addressLine2: data.addressLine2 || '',
-          countryId: 1, // Static ID as per API specification
-          stateId: 1,   // Static ID as per API specification
-          cityId: 1,    // Static ID as per API specification
-          postalCode: data.postalCode || '',
-          latitude: 17,  // Static value as per API specification
-          longitude: 78, // Static value as per API specification
+          country: data.country,
+          state: data.state,
+          city: data.city,
+          postalCode: data.postalCode || null,
+          latitude: "17",  // Static value as string
+          longitude: "78", // Static value as string
           googleMapLink: data.googleMapLink || '',
         },
         marketingAbbreviation: data.marketingAbbreviation,
@@ -445,7 +460,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                       const customer = customersData?.result?.find(c => c.id === option);
                       return customer ? `${customer.companyName} - ${customer.firstName} ${customer.lastName}` : '';
                     }
-                    return `${option.companyName} • `;
+                    return `${option.companyName}  `;
                   }}
                   isOptionEqualToValue={(option, value) => {
                     if (typeof value === 'number') {
@@ -554,7 +569,37 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Postal Code *"
+                  label="City *"
+                  {...register('city', { required: 'City is required' })}
+                  error={!!errors.city}
+                  helperText={errors.city?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="State/Province *"
+                  {...register('state', { required: 'State/Province is required' })}
+                  error={!!errors.state}
+                  helperText={errors.state?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Country *"
+                  {...register('country', { required: 'Country is required' })}
+                  error={!!errors.country}
+                  helperText={errors.country?.message}
+                  sx={{ bgcolor: 'rgba(0, 0, 0, 0.02)', borderRadius: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Postal Code"
                   {...register('postalCode')}
                   error={!!errors.postalCode}
                   helperText={errors.postalCode?.message}
@@ -858,7 +903,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           <Button
             type="submit"
             variant="contained"
-            disabled={isLoading || themesLoading || fontsLoading || customersLoading || !isValid}
+            disabled={isLoading || themesLoading || fontsLoading || customersLoading}
             sx={{
               minWidth: 120,
               borderRadius: 2,
@@ -881,7 +926,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               transition: 'all 0.3s ease',
             }}
           >
-            {isLoading ? 'Creating...' : (themesLoading || fontsLoading || customersLoading) ? 'Loading...' : !isValid ? 'Fill Required Fields' : 'Create Event'}
+            {isLoading ? 'Creating...' : (themesLoading || fontsLoading || customersLoading) ? 'Loading...' : 'Create Event'}
           </Button>
         </DialogActions>
         </DialogContent>
@@ -893,7 +938,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
           sx={{
             position: 'absolute',
             zIndex: 9999,
-            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            backgroundColor: 'rgba(195, 195, 197, 0.85)',
             backdropFilter: 'blur(8px)',
             borderRadius: { xs: 0, sm: 4 },
           }}
@@ -905,11 +950,11 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
             alignItems="center" 
             gap={3}
             sx={{
-              background: 'rgba(255, 255, 255, 0.05)',
+              background: 'rgb(235, 232, 232)',
               borderRadius: 3,
               p: 4,
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 8px 32px rgba(97, 94, 94, 0.3)',
             }}
           >
             {/* Professional Animated Loader */}
@@ -990,7 +1035,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 variant="h6" 
                 sx={{ 
                   fontWeight: 700,
-                  color: '#ffffff',
+                  color: 'rgba(12, 12, 12, 0.8)',
                   fontSize: '1.25rem',
                   letterSpacing: 0.5,
                   mb: 1,
@@ -1004,7 +1049,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                 <Typography 
                   variant="body1" 
                   sx={{ 
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: 'rgba(12, 12, 12, 0.8)',
                     fontSize: '0.95rem',
                     fontWeight: 500,
                   }}
@@ -1040,7 +1085,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
               <Typography 
                 variant="body2" 
                 sx={{ 
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  color: 'rgba(10, 10, 10, 0.6)',
                   fontSize: '0.85rem',
                   mt: 1.5,
                   fontStyle: 'italic',

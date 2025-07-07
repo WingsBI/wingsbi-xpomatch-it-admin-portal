@@ -74,12 +74,12 @@ export interface CreateNewEventRequest {
     venueName: string;
     addressLine1: string;
     addressLine2: string;
-    countryId: number;
-    stateId: number;
-    cityId: number;
-    postalCode: string;
-    latitude: number;
-    longitude: number;
+    country: string;
+    state: string;
+    city: string;
+    postalCode: string | null;
+    latitude: string;
+    longitude: string;
     googleMapLink: string;
   };
   marketingAbbreviation: string;
