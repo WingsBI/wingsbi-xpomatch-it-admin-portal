@@ -663,7 +663,7 @@ export default function CreateEventDialog({ open, onClose, onEventCreated }: Cre
                     }}
                   >
                     https://xpomatch-dev-event-admin-portal.azurewebsites.net/
-                  </Box>
+                    </Box>
                 ),
               }}
               sx={{ 
