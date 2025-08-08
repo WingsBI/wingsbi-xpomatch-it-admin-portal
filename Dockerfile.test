@@ -1,0 +1,63 @@
+# Test Environment Dockerfile
+# 1. Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* yarn.lock* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+  else npm ci; \
+  fi
+
+# Copy source code
+COPY . .
+
+# Copy .env.test as .env.production for build time (Next.js uses .env.production when NODE_ENV=production during build)
+COPY .env.test .env.production
+
+# Set NODE_ENV to production for optimized build, but use test environment variables
+ENV NODE_ENV=production
+
+# Build the app with test environment variables
+RUN npm run build
+
+# 2. Production stage
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Create a non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Only copy necessary files for production
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+
+# Skip copying public directory (it's empty or doesn't exist)
+# COPY --from=builder /app/public ./public
+
+# Copy next config file
+COPY --from=builder /app/next.config.js* ./
+
+# Copy environment files for runtime
+COPY --from=builder /app/.env.test ./
+COPY --from=builder /app/.env.production ./
+
+# Copy startup script
+COPY --from=builder /app/start.sh ./
+RUN chmod +x start.sh
+
+# Set correct permissions
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Set environment to production for optimal runtime performance
+ENV NODE_ENV=production
+
+# Start the app using the startup script
+CMD ["./start.sh"]
